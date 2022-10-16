@@ -1,0 +1,8 @@
+23:26:18 [debug]   [IOServicePool] init
+23:26:18 [debug]   [IOServicePool] init success
+23:26:18 [debug]   [RpcServer] start...
+23:26:18 [debug]   [IOServicePool] run success
+23:26:23 [debug]   [RpcServer] Get a client 
+23:26:26 [debug]   [Connection] Get header req_id: 140365005762336, len: 6
+23:26:26 [debug]   [Connection] Get body: aabbcc
+23:26:37 [debug]   [RpcServer] start success
