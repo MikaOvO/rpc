@@ -99,6 +99,9 @@ public:
             throw std::runtime_error("sync call timeout or deferred");
         }
         return future_result.get().get_result<T>();
+
+
+        
     }
     
     template<typename T, typename... Args>
