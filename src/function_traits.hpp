@@ -11,13 +11,19 @@ template<typename Ret, typename Arg, typename... Args>
 struct FunctionTraits<Ret(Arg, Args...)> {
 public:
     typedef Ret function_type(Arg, Args...);
-    typedef Ret function_pointer_type(Arg, Args...);
+    typedef Ret (*function_pointer_type)(Arg, Args...);
     typedef Ret return_type;
 
-    typedef std::tuple<Arg, Args...> arg_type;
+    typedef std::tuple<Arg, Args...> tuple_type;
     typedef std::tuple<std::remove_const_t<std::remove_reference_t<Arg>>,
                        std::remove_const_t<std::remove_reference_t<Args>>...>
                        bare_tuple_type;
+    
+    typedef std::tuple<std::string, Arg, Args...> name_tuple_type;
+    typedef std::tuple<std::string,
+                       std::remove_const_t<std::remove_reference_t<Arg>>,
+                       std::remove_const_t<std::remove_reference_t<Args>>...>
+                       name_bare_tuple_type;
 };
 
 template <typename Ret> 
@@ -29,6 +35,9 @@ public:
   
   typedef std::tuple<> tuple_type;
   typedef std::tuple<> bare_tuple_type;
+
+  typedef std::tuple<std::string> name_tuple_type;
+  typedef std::tuple<std::string> name_bare_tuple_type;
 };
 
 template <typename Ret, typename... Args>

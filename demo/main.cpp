@@ -3,38 +3,33 @@
 #include <iostream>
 #include <sstream>
 
+#include "../src/msgpack_utils.hpp"
+#include "../src/tuple_to_args_utils.hpp"
+#include "../src/function_traits.hpp"
+
+using namespace std;
+
+void func(int x, bool y, char z) {
+    cout << x << " " << y << " " << z << endl;
+}
+
 int main()
 {
-    msgpack::type::tuple<int, bool, std::string> src(1, true, "example");
-
-    // serialize the object into the buffer.
-    // any classes that implements write(const char*,size_t) can be a buffer.
-    std::stringstream buffer;
-    msgpack::pack(buffer, src);
-
-    // send the buffer ...
-    buffer.seekg(0);
-
-    // deserialize the buffer into msgpack::object instance.
-    std::string str(buffer.str());
-
-    msgpack::object_handle oh =
-        msgpack::unpack(str.data(), str.size());
-
-    // deserialized object is valid during the msgpack::object_handle instance is alive.
-    msgpack::object deserialized = oh.get();
-
-    // msgpack::object supports ostream.
-    std::cout << deserialized << std::endl;
-
-    // convert msgpack::object instance into the original type.
-    // if the type is mismatched, it throws msgpack::type_error exception.
-    msgpack::type::tuple<int, bool, std::string> dst;
-    deserialized.convert(dst);
-
-    // or create the new instance
-    msgpack::type::tuple<int, bool, std::string> dst2 =
-        deserialized.as<msgpack::type::tuple<int, bool, std::string> >();
-
+    // msgpack::type::tuple<int, bool, std::string> src(1, true, "example");
+    auto buffer = pack_args(1, true, 'c');
+    string msg = string(buffer.release());
+    cout << "msg: " << msg << endl;
+    // FunctionTraits<decltype(func)>::arg_type args;
+    auto args = unpack<FunctionTraits<decltype(func)>::arg_type>(msg.c_str(), msg.size());
+    cout << std::get<0>(args) << endl;
+    cout << std::get<1>(args) << endl;
+    cout << std::get<2>(args) << endl;
+    
+    call(func, args);
+    
+    // auto p = unpack<std::tuple<int> >(msg.c_str(), msg.size());
+    // cout << std::get<0>(p) << endl;
+    // cout << std::get<1>(p) << endl;
+    // cout << std::get<2>(p) << endl;
     return 0;
 }

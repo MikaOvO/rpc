@@ -6,14 +6,15 @@
 
 #include "common.hpp"
 #include "log.hpp"
+#include "router.hpp"
 
 using namespace boost;
 
 class Connection : public std::enable_shared_from_this<Connection>,
                    private asio::noncopyable {
 public:
-    Connection(asio::io_service &io_service, size_t timeout_seconds)
-              : socket_(io_service), timeout_seconds_(timeout_seconds), has_stop_(false), body_(INIT_BUFFER_SIZE), timer_(io_service) {
+    Connection(asio::io_service &io_service, Router &router, size_t timeout_seconds)
+              : socket_(io_service), timeout_seconds_(timeout_seconds), has_stop_(false), body_(INIT_BUFFER_SIZE), timer_(io_service), router_(router) {
     }
     ~Connection() {
         stop();
@@ -147,4 +148,5 @@ private:
     char head_[HEADER_LENGTH];
     std::vector<char> body_;
     
+    Router &router_;
 };

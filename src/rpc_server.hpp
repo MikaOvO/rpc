@@ -6,6 +6,7 @@
 #include "io_service_pool.hpp"
 #include "log.hpp"
 #include "common.hpp"
+#include "router.hpp"
 
 using namespace boost;
 
@@ -58,7 +59,7 @@ private:
         });
     }
     void do_accept() {
-        conn_.reset(new Connection(io_service_pool_.get_io_service(), timeout_seconds_));
+        conn_.reset(new Connection(io_service_pool_.get_io_service(), router_, timeout_seconds_));
         acceptor_.async_accept(conn_->get_socket(), [this](system::error_code ec) {
             if (!acceptor_.is_open()) {
                 return;
@@ -106,4 +107,6 @@ private:
     asio::signal_set signals_;
 
     std::atomic<bool> stop_check_{false};
+
+    Router router_;
 };

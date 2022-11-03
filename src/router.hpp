@@ -1,0 +1,100 @@
+#pragma once
+
+#include <map>
+#include <boost/asio.hpp>
+
+#include "msgpack_utils.hpp"
+#include "tuple_to_args_utils.hpp"
+#include "common.hpp"
+#include "function_traits.hpp"
+
+using namespace boost;
+
+class Router {
+public:
+    template<typename Func>
+    void register_handler(std::string name, Func func) {
+        auto f = std::bind(func, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        invoker_[name] = f; 
+    }
+    
+    template<typename Func, typename Self>
+    void register_handler(std::string name, Func func, Self *self) {
+        auto f = std::bind(func, self, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        invoker_[name] = f; 
+    }
+
+    template<typename Func, size_t... Sequence, typename... Args>
+    typename std::result_of<Func(Args...)>::type 
+    call_helper(const Func &func, std::tuple<Args...> args, TupleIndex<Sequence...>) {
+        return func(std::get<Sequence>(args)...);
+    }
+    template<typename Func, typename Self, size_t... Sequence, typename... Args>
+    typename std::result_of<Func(Args...)>::type 
+    call_member_helper(const Func &func, Self *self, std::tuple<Args...> args, TupleIndex<Sequence...>) {
+        return (*self).func(std::get<Sequence>(args)...);
+    }
+
+    template<typename Func, typename... Args>
+    typename std::enable_if<std::is_void<typename std::result_of<Func(Args...)>::type>::value>::type
+    call(const Func &func, std::string &result, std::tuple<Args...> args) {
+        call_helper(func, args, typename TupleSequenceWithout0<sizeof...(Args)>::sequence());
+        result = pack_args_str(Result_OK);
+    }
+
+    template<typename Func, typename... Args>
+    typename std::enable_if<!std::is_void<typename std::result_of<Func(Args...)>::type>::value>::type
+    call(const Func &func, std::string &result, std::tuple<Args...> args) {
+        auto r = call_helper(func, args, typename TupleSequenceWithout0<sizeof...(Args)>::sequence());
+        result = pack_args_str(Result_OK, r);
+    }
+    template<typename Func, typename Self, typename... Args>
+    typename std::enable_if<std::is_void<typename std::result_of<Func(Args...)>::type>::value>::type
+    call_member(const Func &func, Self *self, std::string &result, std::tuple<Args...> args) {
+        call_member_helper(func, args, typename TupleSequenceWithout0<sizeof...(Args)>::sequence());
+        result = pack_args_str(Result_OK);
+    }
+    template<typename Func, typename Self, typename... Args>
+    typename std::enable_if<!std::is_void<typename std::result_of<Func(Args...)>::type>::value>::type
+    call_member(const Func &func, Self *self, std::string &result, std::tuple<Args...> args) {
+        auto r = call_member_helper(func, args, typename TupleSequenceWithout0<sizeof...(Args)>::sequence());
+        result = pack_args_str(Result_OK, r);
+    }
+    template<typename Func>
+    void apply(const Func &func, const char *data, size_t size, std::string &result) {
+        using args_tuple = typename FunctionTraits<Func>::name_bare_tuple_type;
+        try {
+            auto args = unpack<args_tuple>(data, size);
+            call(func, result, args);
+        } catch (const std::exception &e) {
+            result = pack_args_str(Result_FAIL, e.what());
+        }
+    }
+    template<typename Func>
+    void apply(const Func &func, const char *data, size_t size, std::string &result) {
+        using args_tuple = typename FunctionTraits<Func>::name_bare_tuple_type;
+        try {
+            auto args = unpack<args_tuple>(data, size);
+            call(func, result, args);
+        } catch (const std::exception &e) {
+            result = pack_args_str(Result_FAIL, e.what());
+        }
+    }
+    template<typename Func, typename Self>
+    void apply_member(const Func &func, Self *self, const char *data, size_t size, std::string &result) {
+        using args_tuple = typename FunctionTraits<Func>::name_bare_tuple_type;
+        try {
+            auto args = unpack<args_tuple>(data, size);
+            call_member(func, result, args);
+        } catch (const std::exception &e) {
+            result = pack_args_str(Result_FAIL, e.what());
+        }
+    }
+    
+private:
+    std::unordered_map<std::string, std::function<void(
+        const char*,
+        size_t,
+        std::string &result
+    )>> invoker_;
+};  

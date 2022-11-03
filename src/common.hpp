@@ -10,6 +10,9 @@ const static size_t CLIENT_DEFAULT_TIMEOUT = 5;
 const static size_t MSGPACK_INIT_BUFFER_SIZE = 128; 
 const static size_t CHECK_TIME = 5;
 
+const static int Result_OK = 0;
+const static int Result_FAIL = 1;
+
 #pragma pack(4)
 struct RpcHeader {
     uint32_t body_len;
