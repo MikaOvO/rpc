@@ -2,76 +2,93 @@
 
 #include <map>
 #include <boost/asio.hpp>
+#include <iostream>
 
 #include "msgpack_utils.hpp"
 #include "tuple_to_args_utils.hpp"
 #include "common.hpp"
 #include "function_traits.hpp"
+// #include "connection.hpp"
 
 using namespace boost;
 
 class Router {
 public:
+    void router(const char *data, size_t size) { //, std::shared_ptr<Connection> conn) {
+        // auto req_id = conn->get_conn_id();
+        std::string result;
+        try {
+            auto p = unpack<std::tuple<std::string>>(data, size);
+            auto func_name = std::get<0>(p);
+            std::cout << func_name << "\n";
+            auto it = invoker_.find(func_name);
+            if (it == invoker_.end()) {
+                result = pack_args_str(Result_FAIL, "unknown function: " + func_name);
+                return;
+            } 
+            it->second(data, size, result);
+            if (result.size() >= BUFFER_SIZE) {
+                result = pack_args_str(Result_FAIL, "Return size > 10MB.");
+            }
+        } catch (std::exception &e) {
+            result = pack_args_str(Result_FAIL, e.what());
+            std::cout << e.what() << "\n";
+        }
+    }
+
     template<typename Func>
     void register_handler(std::string name, Func func) {
-        auto f = std::bind(func, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        auto f = std::bind(apply<Func>, func, 
+                           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
         invoker_[name] = f; 
     }
     
     template<typename Func, typename Self>
     void register_handler(std::string name, Func func, Self *self) {
-        auto f = std::bind(func, self, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        auto f = std::bind(apply_member<Func, Self>, func, self, 
+                           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
         invoker_[name] = f; 
     }
 
     template<typename Func, size_t... Sequence, typename... Args>
-    typename std::result_of<Func(Args...)>::type 
+    static typename FunctionTraits<Func>::return_type 
     call_helper(const Func &func, std::tuple<Args...> args, TupleIndex<Sequence...>) {
         return func(std::get<Sequence>(args)...);
     }
     template<typename Func, typename Self, size_t... Sequence, typename... Args>
-    typename std::result_of<Func(Args...)>::type 
+    static typename FunctionTraits<Func>::return_type
     call_member_helper(const Func &func, Self *self, std::tuple<Args...> args, TupleIndex<Sequence...>) {
-        return (*self).func(std::get<Sequence>(args)...);
+        return (*self.*func)(std::get<Sequence>(args)...);
     }
 
     template<typename Func, typename... Args>
-    typename std::enable_if<std::is_void<typename std::result_of<Func(Args...)>::type>::value>::type
+    static typename std::enable_if<std::is_void<typename FunctionTraits<Func>::return_type>::value>::type
     call(const Func &func, std::string &result, std::tuple<Args...> args) {
         call_helper(func, args, typename TupleSequenceWithout0<sizeof...(Args)>::sequence());
         result = pack_args_str(Result_OK);
     }
 
     template<typename Func, typename... Args>
-    typename std::enable_if<!std::is_void<typename std::result_of<Func(Args...)>::type>::value>::type
+    static typename std::enable_if<!std::is_void<typename FunctionTraits<Func>::return_type>::value>::type
     call(const Func &func, std::string &result, std::tuple<Args...> args) {
         auto r = call_helper(func, args, typename TupleSequenceWithout0<sizeof...(Args)>::sequence());
         result = pack_args_str(Result_OK, r);
     }
     template<typename Func, typename Self, typename... Args>
-    typename std::enable_if<std::is_void<typename std::result_of<Func(Args...)>::type>::value>::type
+    static typename std::enable_if<std::is_void<typename FunctionTraits<Func>::return_type>::value>::type
     call_member(const Func &func, Self *self, std::string &result, std::tuple<Args...> args) {
-        call_member_helper(func, args, typename TupleSequenceWithout0<sizeof...(Args)>::sequence());
+        call_member_helper(func, self, args, typename TupleSequenceWithout0<sizeof...(Args)>::sequence());
         result = pack_args_str(Result_OK);
     }
     template<typename Func, typename Self, typename... Args>
-    typename std::enable_if<!std::is_void<typename std::result_of<Func(Args...)>::type>::value>::type
+    static typename std::enable_if<!std::is_void<typename FunctionTraits<Func>::return_type>::value>::type
     call_member(const Func &func, Self *self, std::string &result, std::tuple<Args...> args) {
-        auto r = call_member_helper(func, args, typename TupleSequenceWithout0<sizeof...(Args)>::sequence());
+        auto r = call_member_helper(func, self, args, typename TupleSequenceWithout0<sizeof...(Args)>::sequence());
         result = pack_args_str(Result_OK, r);
     }
+
     template<typename Func>
-    void apply(const Func &func, const char *data, size_t size, std::string &result) {
-        using args_tuple = typename FunctionTraits<Func>::name_bare_tuple_type;
-        try {
-            auto args = unpack<args_tuple>(data, size);
-            call(func, result, args);
-        } catch (const std::exception &e) {
-            result = pack_args_str(Result_FAIL, e.what());
-        }
-    }
-    template<typename Func>
-    void apply(const Func &func, const char *data, size_t size, std::string &result) {
+    static void apply(const Func &func, const char *data, size_t size, std::string &result) {
         using args_tuple = typename FunctionTraits<Func>::name_bare_tuple_type;
         try {
             auto args = unpack<args_tuple>(data, size);
@@ -81,11 +98,11 @@ public:
         }
     }
     template<typename Func, typename Self>
-    void apply_member(const Func &func, Self *self, const char *data, size_t size, std::string &result) {
+    static void apply_member(const Func &func, Self *self, const char *data, size_t size, std::string &result) {
         using args_tuple = typename FunctionTraits<Func>::name_bare_tuple_type;
         try {
             auto args = unpack<args_tuple>(data, size);
-            call_member(func, result, args);
+            call_member(func, self, result, args);
         } catch (const std::exception &e) {
             result = pack_args_str(Result_FAIL, e.what());
         }

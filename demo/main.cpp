@@ -20,12 +20,12 @@ int main()
     string msg = string(buffer.release());
     cout << "msg: " << msg << endl;
     // FunctionTraits<decltype(func)>::arg_type args;
-    auto args = unpack<FunctionTraits<decltype(func)>::arg_type>(msg.c_str(), msg.size());
-    cout << std::get<0>(args) << endl;
-    cout << std::get<1>(args) << endl;
-    cout << std::get<2>(args) << endl;
+    // auto args = unpack<FunctionTraits<decltype(func)>::arg_type>(msg.c_str(), msg.size());
+    // cout << std::get<0>(args) << endl;
+    // cout << std::get<1>(args) << endl;
+    // cout << std::get<2>(args) << endl;
     
-    call(func, args);
+    // call(func, args);
     
     // auto p = unpack<std::tuple<int> >(msg.c_str(), msg.size());
     // cout << std::get<0>(p) << endl;

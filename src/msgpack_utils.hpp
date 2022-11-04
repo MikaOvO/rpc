@@ -14,7 +14,7 @@ msgpack::sbuffer pack_args(Args &&...args) {
 template <typename Arg, typename... Args>
 std::string pack_args_str(Arg arg, Args &&...args) {
     msgpack::sbuffer buffer(MSGPACK_INIT_BUFFER_SIZE);
-    msgpack::pack(buffer, arg, std::forward_as_tuple(std::forward<Args>(args)...));
+    msgpack::pack(buffer, std::forward_as_tuple(arg, std::forward<Args>(args)...));
     return std::string(buffer.data(), buffer.size());
 }
 
