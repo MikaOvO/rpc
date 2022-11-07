@@ -45,6 +45,15 @@ public:
     asio::ip::tcp::socket& get_socket() {
         return socket_;
     }
+    void response(uint64_t req_id, std::string data) {
+        size_t len = data.size();
+        std::unique_lock<std::mutex> lock(write_queue_mutex_);
+        write_queue_.push_back({req_id_, std::make_shared<std::string>(std::move(data))});
+        if (write_queue_.size() > 1) {
+            return;
+        }        
+        write();
+    }
 private:
     void read_head() {
         reset_timer();
@@ -84,12 +93,7 @@ private:
             if (!ec) {
                 read_head();
                 Log::WriteLogDefault(0, "[Connection] Get body: %s\n", body_.data());
-                {
-                    std::unique_lock<std::mutex> lock(write_queue_mutex_);
-                    write_queue_.push_back({req_id_, std::make_shared<std::string>(body_.data())});
-                }
-                write();
-                // TODO logic
+                router_.router<Connection>(body_.data(), length, this->shared_from_this());
             } else {
                 stop();
             }

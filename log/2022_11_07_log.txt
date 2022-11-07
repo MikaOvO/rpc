@@ -1,0 +1,19 @@
+16:02:39 [debug]   [IOServicePool] init
+16:02:39 [debug]   [IOServicePool] init success
+16:02:39 [debug]   [RpcServer] start...
+16:02:39 [debug]   [IOServicePool] run success
+16:03:58 [debug]   [RpcServer] Get a client 
+16:08:50 [debug]   [RpcServer] Get a client 
+16:08:53 [debug]   [Connection] Get header req_id: 1, len: 7
+16:08:53 [debug]   [Connection] Get body: “£add
+17:04:34 [debug]   [RpcServer] Get a client 
+17:04:37 [debug]   [Connection] Get header req_id: 1, len: 7
+17:04:37 [debug]   [Connection] Get body: “£add
+18:41:53 [debug]   [IOServicePool] init
+18:41:53 [debug]   [IOServicePool] init success
+18:41:53 [debug]   [RpcServer] start...
+18:41:53 [debug]   [IOServicePool] run success
+18:42:24 [debug]   [RpcServer] Get a client 
+18:42:27 [debug]   [Connection] Get header req_id: 1, len: 7
+18:42:27 [debug]   [Connection] Get body: “£add
+18:52:26 [debug]   [server] Get sig 2

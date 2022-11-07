@@ -7,32 +7,37 @@
 #include "msgpack_utils.hpp"
 #include "tuple_to_args_utils.hpp"
 #include "common.hpp"
+#include "connection.hpp"
 #include "function_traits.hpp"
-// #include "connection.hpp"
 
 using namespace boost;
 
 class Router {
 public:
-    void router(const char *data, size_t size) { //, std::shared_ptr<Connection> conn) {
-        // auto req_id = conn->get_conn_id();
+    template <typename T>
+    void router(const char *data, size_t size, std::shared_ptr<T> conn) {
+        auto req_id = conn->get_conn_id();
         std::string result;
         try {
             auto p = unpack<std::tuple<std::string>>(data, size);
             auto func_name = std::get<0>(p);
-            std::cout << func_name << "\n";
             auto it = invoker_.find(func_name);
             if (it == invoker_.end()) {
                 result = pack_args_str(Result_FAIL, "unknown function: " + func_name);
+                Log::WriteLogDefault(0, "unknown function");
+                conn->response(req_id, std::move(result));
                 return;
             } 
             it->second(data, size, result);
             if (result.size() >= BUFFER_SIZE) {
                 result = pack_args_str(Result_FAIL, "Return size > 10MB.");
+                Log::WriteLogDefault(0, "> 10 MB");
             }
+            conn->response(req_id, std::move(result));
         } catch (std::exception &e) {
             result = pack_args_str(Result_FAIL, e.what());
-            std::cout << e.what() << "\n";
+            Log::WriteLogDefault(2, e.what());
+            conn->response(req_id, std::move(result));
         }
     }
 

@@ -8,32 +8,24 @@
 #include "common.hpp"
 #include "msgpack_utils.hpp"
 
+using namespace std;
+
 using namespace boost;
-
-template<typename T>
-class FutureResult {
-public:
-    FutureResult(uint64_t id, std::future<T> &&future): id_(id), future_(future) {
-
-    }
-    template<typename Rep, typename Per>
-    std::future_status wait_for(const std::chrono::duration<Rep, Per> &rel_time) {
-        return future_.wait_for(rel_time);
-    }
-    T get() {
-        return future_.get();
-    }
-    uint64_t id_;
-    std::future<T> future_;
-};
 
 class ReqResult {
 public:
     ReqResult(std::string &data) : data_(std::move(data)) {
     }
+    bool check_valid() {
+        auto tp = unpack<std::tuple<int> >(data_.c_str(), data_.length());
+        if (std::get<0>(tp) == Result_FAIL) {
+            return false;
+        }
+        return true;
+    }
     template <typename T> 
     T get_result() {
-        auto tp = unpack<std::tuple<int, T> >(data_.c_str(), data.length());
+        auto tp = unpack<std::tuple<int, T> >(data_.c_str(), data_.length());
         return std::get<1>(tp);
     }
 private:
@@ -47,6 +39,7 @@ public:
         std::cout << "init\n";
         thread_ptr_ = std::make_shared<std::thread>(
             [this]() {
+                cout << "io thread: " << this_thread::get_id() << endl;
                 io_service_.run();
             }
         );
@@ -56,11 +49,14 @@ public:
         stop();
     }
     void run() {
+        cout << "before run thread: " << this_thread::get_id() << endl;
         if (thread_ptr_ != nullptr && thread_ptr_->joinable()) {
             thread_ptr_->join();
         }
+        cout << "after run thread: " << this_thread::get_id() << endl;
     }
     void stop() {
+        cout << "stop thread: " << this_thread::get_id() << endl;
         if (!has_connect_) {
             return;
         }
@@ -81,7 +77,15 @@ public:
     template<size_t timeout, typename T = void, typename... Args>
     typename std::enable_if<std::is_void<T>::value, T>::type
     call(const std::string &rpc_name, Args &&...args) {
-        
+        auto future = async_call(rpc_name, std::forward<Args>(args)...);
+        auto status = future.wait_for(std::chrono::seconds(timeout));
+        if (status == std::future_status::timeout || status == std::future_status::deferred) {
+            throw std::runtime_error("sync call timeout or deferred\n");
+        }
+        ReqResult result = future.get();
+        if (!result.check_valid()) {
+            throw std::runtime_error("call error, exception: " + result.get_result<std::string>() + "\n");    
+        }
     }
     
     template<typename T = void, typename... Args>
@@ -93,24 +97,26 @@ public:
     template<size_t timeout, typename T, typename... Args>
     typename std::enable_if<!std::is_void<T>::value, T>::type
     call(const std::string &rpc_name, Args &&...args) {
-        auto future_result = async_call(rpc_name, std::forward<Args>(args)...);
-        auto status = future_result.wait_for(std::chrono::milliseconds(timeout));
+        auto future = async_call(rpc_name, std::forward<Args>(args)...);
+        auto status = future.wait_for(std::chrono::seconds(timeout));
         if (status == std::future_status::timeout || status == std::future_status::deferred) {
-            throw std::runtime_error("sync call timeout or deferred");
+            throw std::runtime_error("sync call timeout or deferred\n");
         }
-        return future_result.get().get_result<T>();
-
-
-        
+        ReqResult result = future.get();
+        if (!result.check_valid()) {
+            throw std::runtime_error("call error, exception: " + result.get_result<std::string>() + "\n");    
+        }
+        return result.get_result<T>();
     }
     
     template<typename T, typename... Args>
     typename std::enable_if<!std::is_void<T>::value, T>::type
     call(const std::string &rpc_name, Args &&...args) {
         return call<CLIENT_DEFAULT_TIMEOUT, T>(rpc_name, std::forward<Args>(args)...);
-    }
+    }    
+
     template <typename... Args>
-    FutureResult<ReqResult> async_call(const std::string &rpc_name,
+    std::future<ReqResult> async_call(const std::string &rpc_name,
                                         Args &&...args) {
         auto p = std::make_shared<std::promise<ReqResult>>();
         std::future<ReqResult> future = p->get_future();
@@ -123,8 +129,9 @@ public:
         }
         auto ret = pack_args(rpc_name, std::forward<Args>(args)...);
         write(req_id, std::move(ret));
-        return FutureResult<ReqResult>(req_id, std::move(future));
+        return future;
     }
+
 public:
     void async_connect() {
         std::cout << "connect...\n";
@@ -141,8 +148,7 @@ public:
             }
         });
     }
-    void call_back(uint64_t req_id, std::string &data) 
-    {
+    void call_back(uint64_t req_id, std::string &data) {
         {
             std::unique_lock<std::mutex> lock(req_mutex_);
             if (future_map_.find(req_id) == future_map_.end()) {
@@ -155,6 +161,7 @@ public:
     }
     void read_head() {
         asio::async_read(socket_, asio::buffer(head_, HEADER_LENGTH), [this](system::error_code ec, size_t length){
+            cout << "cb thread: " << this_thread::get_id() << endl;
             if (!socket_.is_open()) {
                 return;
             }
@@ -175,14 +182,17 @@ public:
     }
     void read_body() {
         asio::async_read(socket_, asio::buffer(body_.data(), body_len_), [this](system::error_code ec, size_t length) {
+            cout << "cb thread: " << this_thread::get_id() << endl;
             if (!socket_.is_open()) {
                 return;
             }
 
             if (!ec) {
                 read_head();
-                // TODO logic
-                std::cout << "body: " << body_.data() << std::endl;
+                std::string res = std::string(body_.data(), body_.size());
+                call_back(req_id_, res);
+                // auto tuple = unpack<std::tuple<int, int>>(body_.data(), body_.size());
+                // std::cout << std::get<0>(tuple) << " " << std::get<1>(tuple) << std::endl;
             } else {
                 stop();
             }
@@ -190,7 +200,7 @@ public:
     }
     void write(uint64_t req_id, msgpack::sbuffer &&buffer) {
         size_t size = buffer.size();
-        if (size < BUFFER_SIZE) {
+        if (size >= BUFFER_SIZE) {
             throw std::runtime_error("params size too large!");
         }
         Message msg{req_id, std::make_shared<std::string>(buffer.release())};
@@ -203,6 +213,8 @@ public:
         write();
     }
     void write() {
+        cout << "write thread: " << this_thread::get_id() << endl;
+
         Message &msg = write_queue_.front();
 
         write_size_ = (uint32_t)msg.content->size();

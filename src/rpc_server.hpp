@@ -51,10 +51,20 @@ public:
         has_stop_ = true;
         stop_check_ = true;
     }
+    template <typename Func>
+    void register_handler(std::string const &name, const Func &f) {
+        router_.register_handler(name, f);
+    }
+    template <typename Func, typename Self>
+    void register_handler(std::string const &name, const Func &f, Self *self) {
+        router_.register_handler(name, f, self);
+    }
+
 private: 
     void do_await_stop() {
         signals_.async_wait(
-            [this](std::error_code, int) { 
+            [this](std::error_code, int sig) {
+                Log::WriteLogDefault(0, "[server] Get sig %d\n", sig); 
                 stop(); 
         });
     }
