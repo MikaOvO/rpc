@@ -30,7 +30,6 @@ public:
     void run() {
         Log::WriteLogDefault(0, "[RpcServer] start...\n");
         io_service_pool_.run();
-        Log::WriteLogDefault(0, "[RpcServer] start success\n");
     }
     void async_run() {
         thread_ptr_ = std::make_shared<std::thread>(
@@ -43,13 +42,13 @@ public:
         if (has_stop_) {
             return;
         }
+        has_stop_ = true;
+        stop_check_ = true;
         io_service_pool_.stop();
         if (thread_ptr_) {
             thread_ptr_->join();
         }
         check_sthread_ptr_->join();
-        has_stop_ = true;
-        stop_check_ = true;
     }
     template <typename Func>
     void register_handler(std::string const &name, const Func &f) {
@@ -94,6 +93,7 @@ private:
             std::this_thread::sleep_for(std::chrono::seconds(CHECK_TIME));
             for (auto it = connections_.cbegin(); it != connections_.cend();) {
                 if (it->second->has_stop()) {
+                    Log::WriteLogDefault(0, "[server] clean %d\n", it->second->get_conn_id());
                     it = connections_.erase(it);
                 } else {
                     ++it;

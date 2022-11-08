@@ -8,7 +8,7 @@
 #include "common.hpp"
 #include "msgpack_utils.hpp"
 
-using namespace std;
+// using namespace std;
 
 using namespace boost;
 
@@ -36,27 +36,24 @@ class RpcClient : private asio::noncopyable {
 public:
     RpcClient(const std::string &host, unsigned short port) 
              : socket_(io_service_), work_(io_service_), host_(std::move(host)), port_(port), has_connect_(false), body_(INIT_BUFFER_SIZE), req_id_(0) {
-        std::cout << "init\n";
         thread_ptr_ = std::make_shared<std::thread>(
             [this]() {
-                cout << "io thread: " << this_thread::get_id() << endl;
+                // cout << "io thread: " << this_thread::get_id() << endl;
                 io_service_.run();
             }
         );
-        std::cout << "init success\n";
     }
     ~RpcClient() {
         stop();
     }
     void run() {
-        cout << "before run thread: " << this_thread::get_id() << endl;
+        // cout << "before run thread: " << this_thread::get_id() << endl;
         if (thread_ptr_ != nullptr && thread_ptr_->joinable()) {
             thread_ptr_->join();
         }
-        cout << "after run thread: " << this_thread::get_id() << endl;
     }
     void stop() {
-        cout << "stop thread: " << this_thread::get_id() << endl;
+        // cout << "stop thread: " << this_thread::get_id() << endl;
         if (!has_connect_) {
             return;
         }
@@ -67,12 +64,14 @@ public:
         }
         has_connect_ = false;
 
-        if (thread_ptr_ != nullptr) {
-            io_service_.stop();
-            if (thread_ptr_->joinable()) {
-                thread_ptr_->join();
-            }
-        }
+        io_service_.stop();
+
+        // if (thread_ptr_ != nullptr) {
+        //     io_service_.stop();
+        //     if (thread_ptr_->joinable()) {
+        //         thread_ptr_->join();
+        //     }
+        // }
     }
     template<size_t timeout, typename T = void, typename... Args>
     typename std::enable_if<std::is_void<T>::value, T>::type
@@ -132,9 +131,19 @@ public:
         return future;
     }
 
-public:
+    void connect() {
+        async_connect();
+        for (int i = 0; i < WAIT_CONNECT_TIME; ++i) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            if (has_connect_) {
+                return;
+            }
+        }
+        throw std::runtime_error("cannot connect.");
+    }
+
+private:
     void async_connect() {
-        std::cout << "connect...\n";
         assert(port_ != 0);
         auto addr = asio::ip::address::from_string(host_);
         socket_.async_connect({addr, port_}, [this](const system::error_code &ec) {
@@ -161,7 +170,7 @@ public:
     }
     void read_head() {
         asio::async_read(socket_, asio::buffer(head_, HEADER_LENGTH), [this](system::error_code ec, size_t length){
-            cout << "cb thread: " << this_thread::get_id() << endl;
+            // cout << "cb thread: " << this_thread::get_id() << endl;
             if (!socket_.is_open()) {
                 return;
             }
@@ -169,7 +178,7 @@ public:
                 RpcHeader *header = (RpcHeader *)(head_);
                 req_id_ = header->req_id;
                 body_len_ = header->body_len;
-                std::cout << "head: " << req_id_ << " " << body_len_ << std::endl;
+                // std::cout << "head: " << req_id_ << " " << body_len_ << std::endl;
                 if (body_len_ > 0 && body_len_ < BUFFER_SIZE) {
                     read_body();
                 } else {
@@ -182,7 +191,7 @@ public:
     }
     void read_body() {
         asio::async_read(socket_, asio::buffer(body_.data(), body_len_), [this](system::error_code ec, size_t length) {
-            cout << "cb thread: " << this_thread::get_id() << endl;
+            // cout << "cb thread: " << this_thread::get_id() << endl;
             if (!socket_.is_open()) {
                 return;
             }
@@ -213,7 +222,7 @@ public:
         write();
     }
     void write() {
-        cout << "write thread: " << this_thread::get_id() << endl;
+        // cout << "write thread: " << this_thread::get_id() << endl;
 
         Message &msg = write_queue_.front();
 
@@ -248,7 +257,8 @@ public:
     char head_[HEADER_LENGTH];
     std::vector<char> body_;
 
-    bool has_connect_;
+    std::atomic<bool> has_connect_;
+
     asio::ip::tcp::socket socket_;
     asio::io_context::work work_;
     std::shared_ptr<std::thread> thread_ptr_;

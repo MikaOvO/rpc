@@ -6,9 +6,11 @@
 const static size_t HEADER_LENGTH = 12;
 const static size_t INIT_BUFFER_SIZE = 128;
 const static size_t BUFFER_SIZE = 10 * 1024 * 1024;
-const static size_t CLIENT_DEFAULT_TIMEOUT = 5;
+const static size_t CLIENT_DEFAULT_TIMEOUT = 50;
 const static size_t MSGPACK_INIT_BUFFER_SIZE = 128; 
-const static size_t CHECK_TIME = 5;
+const static size_t CHECK_TIME = 50;
+const static int LOG_LEVEL = 3;
+const static int WAIT_CONNECT_TIME = 5;
 
 const static int Result_OK = 0;
 const static int Result_FAIL = 1;

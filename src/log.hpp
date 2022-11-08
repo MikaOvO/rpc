@@ -9,6 +9,8 @@
 #include <map>
 #include <unordered_map>
 
+#include "common.hpp"
+
 const static char* level_info[4] = {
     "[debug]  ", 
     "[info]   ",
@@ -17,7 +19,6 @@ const static char* level_info[4] = {
 };
 const static char* default_file_name = "log";
 const static char* dir = "/home/mika/workspace/cpp_workspace/rpc/log";
-const static int log_level = 0;
 
 class Log {
 public:
@@ -28,7 +29,7 @@ public:
     
     template<typename... Args>
     void InstanceWriteLog(int level, const char *file_name_, const char *format, Args &&...args) {
-        if (level < log_level) {
+        if (level < LOG_LEVEL) {
             return;
         }
         time_t now = time(0);

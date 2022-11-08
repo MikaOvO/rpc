@@ -1,0 +1,155 @@
+15:46:43 [debug]   [IOServicePool] init
+15:46:43 [debug]   [IOServicePool] init success
+15:46:43 [debug]   [RpcServer] start...
+15:46:43 [debug]   [IOServicePool] run success
+15:47:02 [debug]   [RpcServer] Get a client 
+15:47:03 [debug]   [Connection] Get header req_id: 1, len: 7
+15:47:03 [debug]   [Connection] Get body: “£add
+15:47:03 [debug]   call15:47:03 [debug]   [server] clean 0
+15:47:46 [debug]   [RpcServer] Get a client 
+15:47:47 [debug]   [Connection] Get header req_id: 1, len: 9
+15:47:47 [debug]   [Connection] Get body: “£addÍx¦Î
+15:47:47 [warning] led: Args not match!15:47:48 [debug]   [server] clean 1
+15:47:58 [debug]   [RpcServer] Get a client 
+15:48:03 [debug]   [server] clean 2
+15:48:08 [debug]   [RpcServer] Get a client 
+15:48:09 [debug]   [Connection] Get header req_id: 1, len: 7
+15:48:09 [debug]   [Connection] Get body: “£add
+15:48:09 [debug]   call15:48:09 [debug]   [Connection] Get header req_id: 2, len: 7
+15:48:09 [debug]   [Connection] Get body: “£add
+15:48:09 [debug]   call15:48:09 [debug]   [Connection] Get header req_id: 3, len: 7
+15:48:09 [debug]   [Connection] Get body: “£add
+15:48:09 [debug]   call15:48:09 [debug]   [Connection] Get header req_id: 4, len: 7
+15:48:09 [debug]   [Connection] Get body: “£add
+15:48:09 [debug]   call15:48:09 [debug]   [Connection] Get header req_id: 5, len: 7
+15:48:09 [debug]   [Connection] Get body: “£add
+15:48:09 [debug]   call15:48:09 [debug]   [Connection] Get header req_id: 6, len: 7
+15:48:09 [debug]   [Connection] Get body: “£add
+15:48:09 [debug]   call15:48:09 [debug]   [Connection] Get header req_id: 7, len: 7
+15:48:09 [debug]   [Connection] Get body: “£add
+15:48:09 [debug]   call15:48:09 [debug]   [Connection] Get header req_id: 8, len: 7
+15:48:09 [debug]   [Connection] Get body: “£add
+15:48:09 [debug]   call15:48:09 [debug]   [Connection] Get header req_id: 9, len: 7
+15:48:09 [debug]   [Connection] Get body: “£add
+15:48:09 [debug]   call15:48:09 [debug]   [Connection] Get header req_id: 10, len: 7
+15:48:09 [debug]   [Connection] Get body: “£add
+15:48:09 [debug]   call15:48:10 [debug]   [Connection] Get header req_id: 11, len: 7
+15:48:10 [debug]   [Connection] Get body: “£add
+15:48:10 [debug]   call15:48:10 [debug]   [Connection] Get header req_id: 12, len: 175
+15:48:10 [debug]   [Connection] Get body: ’£catÙ¨xsjybldbefsarcbynecdyggxxpklorellnmpapqfwkhopkmcoqhnwnkuewhsqmgbbuqcljjivswmdkqtbxixmvtrrbljptnsnfwzqfjmafadrrwsofsbcnuvqhffbsaqxwpqcacehchzvfrkmlnozjkpqpxrjxkitzyxacbh
+15:48:10 [debug]   call15:48:13 [debug]   [server] clean 3
+15:48:30 [debug]   [server] Get sig 2
+15:51:33 [debug]   [IOServicePool] init
+15:51:33 [debug]   [IOServicePool] init success
+15:51:33 [debug]   [RpcServer] start...
+15:51:33 [debug]   [IOServicePool] run success
+15:51:39 [debug]   [RpcServer] Get a client 
+15:51:40 [debug]   [Connection] Get header req_id: 1, len: 7
+15:51:40 [debug]   [Connection] Get body: “£add
+15:51:40 [debug]   call15:51:58 [debug]   [RpcServer] Get a client 
+15:51:59 [debug]   [Connection] Get header req_id: 1, len: 7
+15:51:59 [debug]   [Connection] Get body: “£add
+15:51:59 [debug]   call15:51:59 [debug]   [Connection] Get header req_id: 2, len: 7
+15:51:59 [debug]   [Connection] Get body: “£add
+15:51:59 [debug]   call15:51:59 [debug]   [Connection] Get header req_id: 3, len: 7
+15:51:59 [debug]   [Connection] Get body: “£add
+
+15:51:59 [debug]   call15:51:59 [debug]   [Connection] Get header req_id: 4, len: 7
+15:51:59 [debug]   [Connection] Get body: “£add
+15:51:59 [debug]   call15:51:59 [debug]   [Connection] Get header req_id: 5, len: 7
+15:51:59 [debug]   [Connection] Get body: “£add
+
+15:51:59 [debug]   call15:51:59 [debug]   [Connection] Get header req_id: 6, len: 7
+15:51:59 [debug]   [Connection] Get body: “£add
+15:51:59 [debug]   call15:51:59 [debug]   [Connection] Get header req_id: 7, len: 7
+15:51:59 [debug]   [Connection] Get body: “£add
+15:51:59 [debug]   call15:51:59 [debug]   [Connection] Get header req_id: 8, len: 7
+15:51:59 [debug]   [Connection] Get body: “£add
+
+15:51:59 [debug]   call15:51:59 [debug]   [Connection] Get header req_id: 9, len: 7
+15:51:59 [debug]   [Connection] Get body: “£add
+15:51:59 [debug]   call15:51:59 [debug]   [Connection] Get header req_id: 10, len: 7
+15:51:59 [debug]   [Connection] Get body: “£add
+15:51:59 [debug]   call15:52:00 [debug]   [Connection] Get header req_id: 11, len: 7
+15:52:00 [debug]   [Connection] Get body: “£add
+15:52:00 [debug]   call15:52:00 [debug]   [Connection] Get header req_id: 12, len: 14
+15:52:00 [debug]   [Connection] Get body: ’£cat¨xsjybldb
+15:52:00 [debug]   call15:52:00 [debug]   [Connection] Get header req_id: 13, len: 24
+15:52:00 [debug]   [Connection] Get body: ’£cat²sarcbynecdyggxxpkl
+15:52:00 [debug]   call15:52:00 [debug]   [Connection] Get header req_id: 14, len: 12
+15:52:00 [debug]   [Connection] Get body: ’£cat¦ellnmpnecdyggxxpkl
+15:52:00 [debug]   call15:52:00 [debug]   [Connection] Get header req_id: 15, len: 12
+15:52:00 [debug]   [Connection] Get body: ’£cat¦qfwkhonecdyggxxpkl
+15:52:00 [debug]   call15:52:00 [debug]   [Connection] Get header req_id: 16, len: 15
+15:52:00 [debug]   [Connection] Get body: ’£cat©mcoqhnwnkdyggxxpkl
+15:52:00 [debug]   call15:52:00 [debug]   [Connection] Get header req_id: 17, len: 27
+15:52:00 [debug]   [Connection] Get body: ’£cat±whsqmgbbuqcljjivsxpkl
+15:52:00 [debug]   call15:52:23 [debug]   [server] clean 1
+15:52:23 [debug]   [server] clean 0
+15:52:45 [debug]   [RpcServer] Get a client 
+15:52:46 [debug]   [Connection] Get header req_id: 1, len: 7
+15:52:46 [debug]   [Connection] Get body: “£add
+15:52:46 [debug]   call15:52:46 [debug]   [Connection] Get header req_id: 2, len: 7
+15:52:46 [debug]   [Connection] Get body: “£add
+15:52:46 [debug]   call15:52:46 [debug]   [Connection] Get header req_id: 3, len: 7
+15:52:46 [debug]   [Connection] Get body: “£add
+
+15:52:46 [debug]   call15:52:46 [debug]   [Connection] Get header req_id: 4, len: 7
+15:52:46 [debug]   [Connection] Get body: “£add
+15:52:46 [debug]   call15:52:46 [debug]   [Connection] Get header req_id: 5, len: 7
+15:52:46 [debug]   [Connection] Get body: “£add
+
+15:52:46 [debug]   call15:52:46 [debug]   [Connection] Get header req_id: 6, len: 7
+15:52:46 [debug]   [Connection] Get body: “£add
+15:52:46 [debug]   call15:52:46 [debug]   [Connection] Get header req_id: 7, len: 7
+15:52:46 [debug]   [Connection] Get body: “£add
+15:52:46 [debug]   call15:52:46 [debug]   [Connection] Get header req_id: 8, len: 7
+15:52:46 [debug]   [Connection] Get body: “£add
+
+15:52:46 [debug]   call15:52:46 [debug]   [Connection] Get header req_id: 9, len: 7
+15:52:46 [debug]   [Connection] Get body: “£add
+15:52:46 [debug]   call15:52:46 [debug]   [Connection] Get header req_id: 10, len: 7
+15:52:46 [debug]   [Connection] Get body: “£add
+15:52:46 [debug]   call15:52:47 [debug]   [Connection] Get header req_id: 11, len: 7
+15:52:47 [debug]   [Connection] Get body: “£add
+15:52:47 [debug]   call15:52:47 [debug]   [Connection] Get header req_id: 12, len: 14
+15:52:47 [debug]   [Connection] Get body: ’£cat¨xsjybldb
+15:52:47 [debug]   call15:52:47 [debug]   [Connection] Get header req_id: 13, len: 24
+15:52:47 [debug]   [Connection] Get body: ’£cat²sarcbynecdyggxxpkl
+15:52:47 [debug]   call15:52:47 [debug]   [Connection] Get header req_id: 14, len: 12
+15:52:47 [debug]   [Connection] Get body: ’£cat¦ellnmpnecdyggxxpkl
+15:52:47 [debug]   call15:52:47 [debug]   [Connection] Get header req_id: 15, len: 12
+15:52:47 [debug]   [Connection] Get body: ’£cat¦qfwkhonecdyggxxpkl
+15:52:47 [debug]   call15:52:47 [debug]   [Connection] Get header req_id: 16, len: 15
+15:52:47 [debug]   [Connection] Get body: ’£cat©mcoqhnwnkdyggxxpkl
+15:52:47 [debug]   call15:52:47 [debug]   [Connection] Get header req_id: 17, len: 27
+15:52:47 [debug]   [Connection] Get body: ’£cat±whsqmgbbuqcljjivsxpkl
+15:52:47 [debug]   call15:53:13 [debug]   [server] clean 2
+15:54:35 [debug]   [RpcServer] Get a client 
+15:54:35 [debug]   [RpcServer] Get a client 
+15:54:35 [debug]   [RpcServer] Get a client 
+15:54:35 [debug]   [RpcServer] Get a client 
+15:54:35 [debug]   [RpcServer] Get a client 
+15:54:36 [debug]   [Connection] Get header req_id: 1, len: 7
+15:54:36 [debug]   [Connection] Get header req_id: 1, len: 7
+15:54:36 [debug]   [Connection] Get header req_id: 1, len: 7
+15:54:36 [debug]   [Connection] Get body: “£add
+15:54:36 [debug]   [Connection] Get body: “£add
+15:54:36 [debug]   call15:54:36 [debug]   [Connection] Get header req_id: 1, len: 7
+15:54:36 [debug]   [Connection] Get body: “£add
+15:54:36 [debug]   [Connection] Get body: “£add
+15:54:36 [debug]   call16:06:23 [debug]   [IOServicePool] init
+16:06:23 [debug]   [IOServicePool] init success
+16:06:23 [debug]   [RpcServer] start...
+16:06:23 [debug]   [IOServicePool] run success
+16:06:28 [debug]   [RpcServer] Get a client 
+16:06:28 [debug]   [RpcServer] Get a client 
+16:06:28 [debug]   [RpcServer] Get a client 
+16:06:28 [debug]   [RpcServer] Get a client 
+16:06:28 [debug]   [RpcServer] Get a client 
+16:06:29 [debug]   [Connection] Get header req_id: 1, len: 7
+16:06:29 [debug]   [Connection] Get header req_id: 1, len: 7
+16:06:29 [debug]   [Connection] Get body: “£add
+
+16:06:29 [debug]   [Connection] Get body: “£add
+
