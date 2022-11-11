@@ -25,7 +25,7 @@ int add(int x, int y) {
 }
 
 int main() {
-    RpcServer rs(9007, 4);
+    RpcServer rs(9008, 4);
     Foo foo("begin_");
     rs.register_handler("add", &add);
     rs.register_handler("cat", &Foo::cat, &foo);

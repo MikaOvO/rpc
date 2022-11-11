@@ -18,17 +18,11 @@ const static char* level_info[4] = {
     "[error]  "
 };
 const static char* default_file_name = "log";
-const static char* dir = "/home/mika/workspace/cpp_workspace/rpc/log";
 
 class Log {
 public:
-    static Log* GetInstance() {
-        static Log log;
-        return &log;
-    }
-    
     template<typename... Args>
-    void InstanceWriteLog(int level, const char *file_name_, const char *format, Args &&...args) {
+    static void WriteLog(int level, const char *file_name_, const char *format, Args &&...args) {
         if (level < LOG_LEVEL) {
             return;
         }
@@ -48,48 +42,39 @@ public:
         
         char file[128], buffer[1024];
 
-        snprintf(file, 128, "%s/%s_%s_%s_%s.txt", dir, year, month, day, file_name_);
+        snprintf(file, 128, "%s/%s_%s_%s_%s.txt", log_dir, year, month, day, file_name_);
         snprintf(buffer, 1024, format, args...);
 
-        if (current_file == nullptr || file != current_file) {
-            if (current_file != nullptr) {
-                file_stream.close();
-            }
-            file_stream.open(file, std::ios::app);
-            current_file = file;
-        }
+        std::unique_lock<std::mutex> lock(mtx);
+        // if (current_file == nullptr || file != current_file) {
+        //     if (current_file != nullptr) {
+        //         file_stream.close();
+        //     }
+        //     file_stream.open(file, std::ios::app);
+        //     current_file = file;
+        // }
+        file_stream.open(file, std::ios::app);
+
         file_stream << hour << ":" << minute << ":" << second << " ";
         file_stream << level_info[level] << " ";  
         file_stream << buffer;
 
         file_stream.close();
-        current_file = nullptr;
-    }
-
-    template<typename... Args>
-    void InstanceWriteLogDefault(int level, const char *format, Args &&...args) {
-        InstanceWriteLog(level, default_file_name, format, args...);
-    }
-
-    template<typename... Args>
-    static void WriteLog(int level, const char *file_name_, const char *format, Args &&...args) {
-        Log::GetInstance()->InstanceWriteLog(level, file_name_, format, args...);
     }
 
     template<typename... Args>
     static void WriteLogDefault(int level, const char *format, Args &&...args) {
-        Log::GetInstance()->InstanceWriteLog(level, default_file_name, format, args...);
+        Log::WriteLog(level, default_file_name, format, args...);
     }
 
 private:
     Log() {
-        current_file = nullptr;
     }
-    virtual ~Log() {
-        if (current_file != nullptr) {
-            file_stream.close();
-        }
+    ~Log() {
     }
-    char* current_file;
-    std::ofstream file_stream;
+    std::ofstream static file_stream;
+    std::mutex static mtx;
 };
+
+std::ofstream Log::file_stream;
+std::mutex Log::mtx;

@@ -11,6 +11,8 @@ cstdint
 -
 string
 -
+stdlib.h
+../src/stdlib.h
 
 ../src/connection.hpp
 boost/asio.hpp
