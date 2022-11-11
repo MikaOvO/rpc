@@ -59,7 +59,7 @@ return result.get_result<T>();
   * 利用tuple_to_args_utils.hpp，根据t得到一个结构体TupleIndex<1, 2> i
   * 暂不考虑result等等，func(std::get\<i::type>(t)...)即可
   * 调用时利用萃取编写函数返回值，SFINAE（匹配失败不算编译错误，详情请查询std::enable_if）加上判断is_void就可以对返回值是否为void进行不同的逻辑编写
-  * 如果有异常，返回std::tuple<int, string>(1, std::exception::what)()) ；否则返回std::tuple<int, string>(0, "3")
+  * 如果有异常，返回std::tuple<int, string>(1, std::exception::what)()) ；否则返回std::tuple<int, int>(0, 3)
   * 客户端进行异常判断，如果无异常，根据预期返回值将tuple第二维转为目标类型T，此处T为int
 
 2. 异步分析
