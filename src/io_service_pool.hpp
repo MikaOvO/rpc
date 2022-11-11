@@ -26,14 +26,16 @@ public:
     void run() {
         std::vector<std::shared_ptr<std::thread> > threads;
         for (size_t i = 0; i < pool_size_; ++i) {
-            threads.emplace_back(
-              std::make_shared<std::thread>(
-                [](std::shared_ptr<asio::io_context> isp) { isp->run(); }, io_services_[i]   
-              )
-            );
+            for (size_t j = 0; j < THREAD_NUMBER_PER_CONTEXT; ++j) {
+                threads.emplace_back(
+                std::make_shared<std::thread>(
+                    [](std::shared_ptr<asio::io_context> isp) { isp->run(); }, io_services_[i]   
+                )
+                );
+            }
         }
         Log::WriteLogDefault(0, "[IOServicePool] run success\n");
-        for (size_t i = 0; i < pool_size_; ++i) {
+        for (size_t i = 0; i < pool_size_ * THREAD_NUMBER_PER_CONTEXT; ++i) {
             threads[i]->join();
         }
     }

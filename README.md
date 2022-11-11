@@ -4,7 +4,7 @@
 
 网络编程支持同步（TODO）异步两种方式，同步为从零实现，异步使用boost::asio网络库。
 
-客户端支持同步和异步调用两种方式，同步会阻塞直到获取结果，异步将会获得std::future\<ReqResult>，其定义位于rpc_client.hpp，后续可自行管理。
+客户端支持同步和异步调用两种方式，同步会阻塞直到获取结果，异步将会获得std::future\<ReqResult>，其声明和定义位于rpc_client.hpp，后续可自行管理。
 
 传输协议使用msgpack（在本项目所需功能中，相比json更易用也更快）。
 
@@ -46,7 +46,7 @@ return result.get_result<T>();
 1. 怎么做到？
 * 网络传输时不需要复杂协议，只需要有一个自定义head记录长度、id、类型等即可，数据存在后面的body中
 * FunctionTraits可以萃取出任意函数的返回值、参数、函数名
-* 服务端利用bind，将函数转为统一格式（类成员和全局或静态）并存储在哈希表里
+* 服务端利用std::bind，将函数转为统一格式（类成员和全局或静态）并存储在哈希表里
 * 利用msgpack，在客户端时将参数转为字符串，在服务端将字符串转为tuple
 * 利用模板元和不定参数展开技巧，将tuple展开为参数
 * 调用，并得到结果（或异常）后返回
@@ -58,7 +58,7 @@ return result.get_result<T>();
   * 解析s得到std::tuple<std::string, int, int> t
   * 利用tuple_to_args_utils.hpp，根据t得到一个结构体TupleIndex<1, 2> i
   * 暂不考虑result等等，func(std::get\<i::type>(t)...)即可
-  * 调用时利用萃取编写函数返回值，SFINAE（匹配失败不算编译错误，详情请查询std::enable_if）加上判断is_void就可以对返回值是否为void进行不同的逻辑编写
+  * 调用时利用萃取编写函数返回值，SFINAE（匹配失败不算编译错误，详情请查询std::enable_if）加上判断std::is_void就可以对返回值是否为void进行不同的逻辑编写
   * 如果有异常，返回std::tuple<int, string>(1, std::exception::what)()) ；否则返回std::tuple<int, int>(0, 3)
   * 客户端进行异常判断，如果无异常，根据预期返回值将tuple第二维转为目标类型T，此处T为int
 
@@ -80,7 +80,30 @@ return result.get_result<T>();
   * 写
   * 其实就是上面说的场景，socket即为该fd，使用该方法即可
 
+3. 同步分析
+
 ## 改进
+
+1. 简化萃取和模板元部分
+*  为了将tuple展开为不定参数，需要模板元来生成序列<0, 1, 2...>，从而配合get取值
+*  由于传来的参数附带rpc_name，所以展开到1即可，而非0
+*  萃取的代码就不需要写rest_rpc中的2nd了，模板元的代码也不需要写那么多（比如实现循环等等）
+*  返回值从```typename std::enable_if<std::is_void<typename std::result_of<F(std::weak_ptr<connection>, Args...)>::type>::value>::type```修改为```typename FunctionTraits<Func>::return_type```，原因在于我们的Arg包含了rpc_name，只是最后展开的时候从1开始
+*  整体代码量减少，更好理解
+
+2. 提升性能
+* rest_rpc期望在调用过程时实现同步和异步两种方式，但代码只体现了一种
+* 对每一个boost::asio::io_context，只有一个线程run
+* 根据分析中的异步分析，不同线程写回结果是没有错误的
+* 根据分析中的异步分析，多线程读是没有错误的，因为同一个socket head和body同时只有一个在监听，也不会有多个线程同时监听head
+* 调用过程可以有多个线程完成（下一个方法也可以）
+* 对每一个boost::asio::io_context，可以多run几个线程，防止某一个运行线程卡死在一个客户上太久（多个客户端请求可能对应一个io_context），因为运行逻辑的线程是run io_context的回调线程
+
+3. 添加同步服务器、日志功能
+
+TODO
+
+## 性能
 
 TODO
 

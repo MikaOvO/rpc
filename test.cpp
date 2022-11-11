@@ -9,7 +9,7 @@ void check() {
     
     rc.connect();
 
-    for (int i = 1; i <= rand() % 50 + 1; ++i) {
+    for (int i = 1; i <= rand() % 200 + 1; ++i) {
         int x = rand() % 10 + 1;
         int y = rand() % 10 + 1;
         int result = rc.call<int>("add", x, y);
@@ -17,7 +17,7 @@ void check() {
         if (i % 10 == 0) std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
-    for (int i = 1; i <= rand() % 50 + 1; ++i) {
+    for (int i = 1; i <= rand() % 200 + 1; ++i) {
         int x = rand() % 20 + 1;
         string tmp = "";
         for (int j = 0; j < x; ++j)  {
