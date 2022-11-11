@@ -98,6 +98,7 @@ return result.get_result<T>();
 * 根据分析中的异步分析，多线程读是没有错误的，因为同一个socket head和body同时只有一个在监听，也不会有多个线程同时监听head
 * 调用过程可以有多个线程完成（下一个方法也可以）
 * 对每一个boost::asio::io_context，可以多run几个线程，防止某一个运行线程卡死在一个客户上太久（多个客户端请求可能对应一个io_context），因为运行逻辑的线程是run io_context的回调线程
+* 添加common.hpp: THREAD_NUMBER_PER_CONTEXT，测试通过
 
 3. 添加同步服务器、日志功能
 
