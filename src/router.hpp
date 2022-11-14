@@ -16,7 +16,7 @@ class Router {
 public:
     template <typename T>
     void router(const char *data, size_t size, std::shared_ptr<T> conn) {
-        auto req_id = conn->get_conn_id();
+        auto req_id = conn->get_req_id();
         std::string result;
         try {
             auto p = unpack<std::tuple<std::string>>(data, size);

@@ -36,6 +36,9 @@ public:
         }
         has_stop_ = true;
     }
+    uint64_t get_req_id() {
+        return req_id_;
+    }
     int64_t get_conn_id() {
         return conn_id_;
     }
