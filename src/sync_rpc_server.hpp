@@ -19,7 +19,7 @@
 #include "timer.hpp"
 #include "utils.hpp"
 
-class SyncRpcServer : public std::enable_shared_from_this<SyncConnection> {
+class SyncRpcServer : public std::enable_shared_from_this<SyncRpcServer> {
 public:
     SyncRpcServer(unsigned short port, int thread_num, triger trig_mode) : has_stop_(false), trig_mode_(trig_mode), client_number_(0) {
         port_ = port;
@@ -30,13 +30,15 @@ public:
         router_ptr_ = std::make_shared<Router>(new Router());
     }
     ~SyncRpcServer() {
-        
+        stop();
     }
     static void handler(std::shared_ptr<SyncRpcServer> server, int sig) {
         server->stop();
     }
     void run() {
-        auto func = std::bind(handler, this->shared_from_this());
+        auto func = [this](int sig) -> void{
+            stop();            
+        };
 
         add_sig(SIGINT, func, false);
         add_sig(SIGTERM, func, false);
@@ -66,10 +68,9 @@ public:
 
         has_stop_ = true;
     }
-private:
     void add_user(int sock_fd, struct sockaddr_in client_address) {
         add_fd(epoll_fd_, sock_fd, true, trig_mode_);
-        users_[sock_fd].init(epoll_fd_, sock_fd, trig_mode_, router_ptr_);
+        users_[sock_fd].init(epoll_fd_, sock_fd, trig_mode_, this->shared_from_this());
         Timer::add_sock(sock_fd);
     }
 
@@ -81,7 +82,7 @@ private:
             if (sock_fd < 0) {
                 return false;
             }
-            if (client_number_ >= MAX_FD - 1) {
+            if (sock_fd >= MAX_FD) {
                 return false;
             }
             add_user(sock_fd, client_address);
@@ -91,7 +92,7 @@ private:
                 if (sock_fd < 0) {
                     break;
                 }
-                if (client_number_ >= MAX_FD - 1) {
+                if (sock_fd >= MAX_FD) {
                     return false;
                 }
                 add_user(sock_fd, client_address);                
@@ -126,10 +127,53 @@ private:
         Timer::run();
     }
 
-    void event_loop() {
-
+    void deal_with_read(int sock_fd, int ev) {
+        if (users_[sock_fd].read()) {
+            Timer::flush_sock(sock_fd);
+            if (users_[sock_fd].is_read_end()) {
+                thread_pool_->submit([this, sock_fd](){
+                    router_ptr_->router<SyncConnection*>(users_[sock_fd].body_, users_[sock_fd].body_len_, &users_[sock_fd]);
+                });
+                users_[sock_fd].reset_read();
+            }
+            mod_fd(epoll_fd_, sock_fd, ev, true, trig_mode_);
+        } else {
+            Timer::delete_sock(sock_fd);
+        }
     }
 
+    void deal_with_write(int sock_fd) {
+        std::unique_lock<std::mutex> lock(users_[sock_fd].write_mtx_);
+        users_[sock_fd].write();
+    }
+
+    void event_loop() {
+        while (! has_stop_) {
+            int number = epoll_wait(epoll_fd_, events_, MAX_EVENTS, -1);
+            if (has_stop_) {
+                break;
+            }
+            if (number < 0) {
+                stop();
+                break;
+            }
+            for (int i = 0; i < number; ++i) {
+                int sock_fd = events_[i].data.fd;
+                if (sock_fd == listen_fd_) {
+                    deal_client_data();
+                } else if (events_[i].events & EPOLLIN) {
+                    thread_pool_->submit([this, sock_fd, i]() {
+                        deal_with_read(sock_fd, events_[i].events & (EPOLLIN | EPOLLOUT));
+                    });
+                } else if (events_[i].events & EPOLLOUT) {
+                    thread_pool_->submit([this, sock_fd]() {
+                        deal_with_write(sock_fd);
+                    });
+                }
+            }
+        }
+    }
+private:
     triger trig_mode_;
     unsigned short port_;
     std::atomic<bool> has_stop_;

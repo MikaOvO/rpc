@@ -96,7 +96,7 @@ private:
             if (!ec) {
                 read_head();
                 Log::WriteLogDefault(0, "[Connection] Get body: %s\n", body_.data());
-                router_.router<Connection>(body_.data(), length, this->shared_from_this());
+                router_.router<std::shared_ptr<Connection> >(body_.data(), length, this->shared_from_this());
             } else {
                 stop();
             }

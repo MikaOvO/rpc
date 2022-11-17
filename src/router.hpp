@@ -7,7 +7,8 @@
 #include "msgpack_utils.hpp"
 #include "tuple_to_args_utils.hpp"
 #include "common.hpp"
-#include "connection.hpp"
+#include "log.hpp"
+// #include "connection.hpp"
 #include "function_traits.hpp"
 
 using namespace boost;
@@ -15,7 +16,7 @@ using namespace boost;
 class Router {
 public:
     template <typename T>
-    void router(const char *data, size_t size, std::shared_ptr<T> conn) {
+    void router(const char *data, size_t size, T conn) {
         auto req_id = conn->get_req_id();
         std::string result;
         try {

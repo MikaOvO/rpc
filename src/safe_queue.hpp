@@ -12,27 +12,27 @@ private:
 public:
     SafeQueue() {}
     ~SafeQueue() {}
-    bool SafeQueue<T>::empty() {
-        std::lock_guard<std::mutex> lock(mu);
-        return que.empty();
+    bool empty() {
+        std::lock_guard<std::mutex> lock(mu_);
+        return que_.empty();
     }
-    size_t SafeQueue<T>::size() {
+    size_t size() {
         std::lock_guard<std::mutex> lock(mu_);
         return que_.size();
     }
-    void SafeQueue<T>::push(T t) {
+    void push(T t) {
         std::lock_guard<std::mutex> lock(mu_);
         que_.push(t);
     }
-    T SafeQueue<T>::front() {
+    T front() {
         std::lock_guard<std::mutex> lock(mu_);
         return que_.front();
     }
-    void SafeQueue<T>::pop() {
+    void pop() {
         std::lock_guard<std::mutex> lock(mu_);
         que_.pop();
     }
-    bool SafeQueue<T>::pop_with_check(T &t) {
+    bool pop_with_check(T &t) {
         std::lock_guard<std::mutex> lock(mu_);
         if (que_.size() == 0) {
             return false;

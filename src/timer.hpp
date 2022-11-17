@@ -12,6 +12,7 @@
 #include <signal.h>
 #include <mutex>
 #include <atomic>
+#include <set>
 
 #include "epoll_utils.hpp"
 #include "utils.hpp"
@@ -37,6 +38,10 @@ public:
     }
     static void stop() {
         stop_ = true;
+        for (auto pair : expire_map_) {
+            int sockfd = pair.first;
+            close(sockfd);
+        }
         if (clean_thread.joinable()) {
             clean_thread.join();
         }
@@ -74,6 +79,9 @@ public:
     }
     static void delete_sock(int sockfd) {
         std::lock_guard<std::mutex> guard(lock_);
+        if (expire_map_.find(sockfd) == expire_map_.end()) {
+            return ;
+        }
         expire_map_.erase(sockfd);
         epoll_ctl(epollfd_, EPOLL_CTL_DEL, sockfd, 0);
         close(sockfd);
@@ -91,6 +99,7 @@ public:
     static std::thread clean_thread;
     static std::priority_queue<expire_sock, std::vector<expire_sock>, std::greater<expire_sock> > sock_queue_;
     static std::unordered_map<int, time_t> expire_map_;
+    static std::unordered_set<int> sock_fds_;
 };
 
 std::atomic<bool> Timer::stop_(false);
