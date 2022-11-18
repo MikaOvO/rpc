@@ -13,6 +13,16 @@ int set_non_blocking(int fd) {
     return old_option;
 }
 
+int set_blocking(int fd) {
+    int old_option = fcntl(fd, F_GETFL);
+    int new_option = old_option;
+    if (old_option & O_NONBLOCK) {
+        new_option ^= O_NONBLOCK;
+    }
+    fcntl(fd, F_SETFL, new_option);
+    return old_option;
+}
+
 void add_fd(int epollfd, int fd, bool one_shot, triger trig_mode) {
     epoll_event event;
     event.data.fd = fd;

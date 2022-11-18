@@ -18,6 +18,7 @@
 #include "thread_pool.hpp"
 #include "timer.hpp"
 #include "utils.hpp"
+#include "log.hpp"
 
 class SyncRpcServer : public std::enable_shared_from_this<SyncRpcServer> {
 public:
@@ -70,7 +71,7 @@ public:
     }
     void add_user(int sock_fd, struct sockaddr_in client_address) {
         add_fd(epoll_fd_, sock_fd, true, trig_mode_);
-        users_[sock_fd].init(epoll_fd_, sock_fd, trig_mode_, this->shared_from_this());
+        users_[sock_fd].init(epoll_fd_, sock_fd, trig_mode_);
         Timer::add_sock(sock_fd);
     }
 
@@ -132,7 +133,7 @@ public:
             Timer::flush_sock(sock_fd);
             if (users_[sock_fd].is_read_end()) {
                 thread_pool_->submit([this, sock_fd](){
-                    router_ptr_->router<SyncConnection*>(users_[sock_fd].body_, users_[sock_fd].body_len_, &users_[sock_fd]);
+                    router_ptr_->router<SyncConnection*>(users_[sock_fd].body_.data(), users_[sock_fd].body_len_, &users_[sock_fd]);
                 });
                 users_[sock_fd].reset_read();
             }

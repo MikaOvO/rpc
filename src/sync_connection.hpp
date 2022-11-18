@@ -163,12 +163,13 @@ public:
         if (write_index_ == res_len_) {
             write_index_ = 0;
             Message &msg = write_queue_.front();
+            RpcHeader header{msg.content->size(), msg.req_id};
             write_queue_.pop_front();
-            res_len_ = msg.content->size();
-            res_.resize(res_len_ + HEADER_LENGTH);
+            res_len_ = msg.content->size() + HEADER_LENGTH;
+            res_.resize(res_len_);
             
-            memcpy(res_.data(), &msg, HEADER_LENGTH);
-            memcpy(res_.data() + HEADER_LENGTH, msg.content->c_str(), res_len_);
+            memcpy(res_.data(), &header, HEADER_LENGTH);
+            memcpy(res_.data() + HEADER_LENGTH, msg.content->c_str(), msg.content->size());
         }
 
         int bytes_send;
@@ -221,8 +222,6 @@ private:
     triger trig_mode_;
     
     std::atomic<bool> has_stop_;
-    uint32_t res_len_;
-    uint32_t body_len_;
     uint64_t req_id_;
     int64_t conn_id_;
 
@@ -230,6 +229,9 @@ private:
     uint32_t read_index_;
 
 public:
+    uint32_t res_len_;
+    uint32_t body_len_;
+    
     std::mutex write_mtx_;
     std::deque<Message> write_queue_;
 

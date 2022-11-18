@@ -35,7 +35,7 @@ private:
 class RpcClient : private asio::noncopyable {
 public:
     RpcClient(const std::string &host, unsigned short port) 
-             : socket_(io_service_), work_(io_service_), host_(std::move(host)), port_(port), has_connect_(false), body_(INIT_BUFFER_SIZE), req_id_(0) {
+             : socket_(io_service_), work_(io_service_), host_(std::move(host)), port_(port), has_connect_(false), body_(INIT_BUFFER_SIZE), req_num_(0) {
         thread_ptr_ = std::make_shared<std::thread>(
             [this]() {
                 // cout << "io thread: " << this_thread::get_id() << endl;
@@ -122,8 +122,8 @@ public:
         uint64_t req_id = 0;
         {
             std::unique_lock<std::mutex> lock(req_mutex_);
-            ++req_id_;
-            req_id = req_id_;
+            ++req_num_;
+            req_id = req_num_;
             future_map_.emplace(req_id, std::move(p));
         }
         auto ret = pack_args(rpc_name, std::forward<Args>(args)...);
@@ -267,5 +267,6 @@ private:
 
     std::mutex req_mutex_;
     uint64_t req_id_;
+    uint64_t req_num_;
     std::unordered_map<std::uint64_t, std::shared_ptr<std::promise<ReqResult>>> future_map_;
 };

@@ -6,7 +6,7 @@
 #include "stdlib.h"
 
 const static char* log_dir = "/home/mika/workspace/cpp_workspace/rpc/log";
-const static int LOG_LEVEL = 0;
+const static int LOG_LEVEL = 3;
 
 // sync params
 const static long CONNECT_TIME_SLOT = 3600;
