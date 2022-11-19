@@ -28,33 +28,28 @@ public:
         thread_pool_ = new ThreadPool(thread_num);
         events_ = new epoll_event[MAX_EVENTS];
         trig_mode_ = trig_mode;
-        router_ptr_ = std::make_shared<Router>(new Router());
+        router_ptr_ = new Router();
     }
     ~SyncRpcServer() {
         stop();
     }
-    static void handler(std::shared_ptr<SyncRpcServer> server, int sig) {
-        server->stop();
-    }
     void run() {
-        auto func = [this](int sig) -> void{
-            stop();            
-        };
-
-        add_sig(SIGINT, func, false);
-        add_sig(SIGTERM, func, false);
-
+        Log::write_log_default(0, "[sync_server] run\n");
         thread_pool_->run();
         std::this_thread::sleep_for(std::chrono::seconds(1));
-
         event_listen();
-        event_loop();
+        thread_pool_->submit([this](){event_loop();});
+        Log::write_log_default(0, "[sync_server] run success\n");
     }
     void stop() {
         if (has_stop_) {
             return;
         }
+        Log::write_log_default(0, "[sync_server] stop\n");
+        has_stop_ = true;
+
         Timer::stop();
+
         thread_pool_->shutdown();
         std::this_thread::sleep_for(std::chrono::seconds(1));
         if (listen_fd_ != -1) {
@@ -63,13 +58,14 @@ public:
         if (epoll_fd_ != -1) {
             close(epoll_fd_);
         }
+
+        delete router_ptr_;
         delete[] users_;
         delete thread_pool_;
         delete[] events_;
-
-        has_stop_ = true;
     }
     void add_user(int sock_fd, struct sockaddr_in client_address) {
+        Log::write_log_default(0, "[sync_server] get user: %d\n", sock_fd);
         add_fd(epoll_fd_, sock_fd, true, trig_mode_);
         users_[sock_fd].init(epoll_fd_, sock_fd, trig_mode_);
         Timer::add_sock(sock_fd);
@@ -106,14 +102,12 @@ public:
     void event_listen() {
         listen_fd_ = socket(PF_INET, SOCK_STREAM, 0);
         assert(listen_fd_ >= 0);
-
         int ret = 0;
         struct sockaddr_in address;
         bzero(&address, sizeof(address));
         address.sin_family = AF_INET;
         address.sin_addr.s_addr = htonl(INADDR_ANY);
         address.sin_port = htons(port_);
-
         ret = bind(listen_fd_, (struct sockaddr *)&address, sizeof(address));
         assert(ret >= 0);
         ret = listen(listen_fd_, 5);
@@ -123,12 +117,15 @@ public:
         assert(epoll_fd_ != -1);
         
         add_fd(epoll_fd_, listen_fd_, false, trig_mode_);
+
+        Log::write_log_default(0, "[sync_server] epoll_fd: %d, listen_fd: %d\n", epoll_fd_, listen_fd_);
         
-        Timer::init(epoll_fd_);
+        Timer::init(epoll_fd_, thread_pool_);
         Timer::run();
     }
 
     void deal_with_read(int sock_fd, int ev) {
+        Log::write_log_default(0, "[sync_server] deal read: %d\n", sock_fd);
         if (users_[sock_fd].read()) {
             Timer::flush_sock(sock_fd);
             if (users_[sock_fd].is_read_end()) {
@@ -144,6 +141,7 @@ public:
     }
 
     void deal_with_write(int sock_fd) {
+        Log::write_log_default(0, "[sync_server] deal write: %d\n", sock_fd);
         std::unique_lock<std::mutex> lock(users_[sock_fd].write_mtx_);
         users_[sock_fd].write();
     }
@@ -151,6 +149,7 @@ public:
     void event_loop() {
         while (! has_stop_) {
             int number = epoll_wait(epoll_fd_, events_, MAX_EVENTS, -1);
+            Log::write_log_default(0, "[sync server] epoll listen %d events\n", number);
             if (has_stop_) {
                 break;
             }
@@ -174,6 +173,14 @@ public:
             }
         }
     }
+    template <typename Func>
+    void register_handler(std::string const &name, const Func &f) {
+        router_ptr_->register_handler(name, f);
+    }
+    template <typename Func, typename Self>
+    void register_handler(std::string const &name, const Func &f, Self *self) {
+        router_ptr_->register_handler(name, f, self);
+    }
 private:
     triger trig_mode_;
     unsigned short port_;
@@ -188,5 +195,7 @@ private:
 
     int client_number_;
     
-    std::shared_ptr<Router> router_ptr_;
+    Router *router_ptr_;
+    
+    // std::shared_ptr<std::thread> run_thread_ptr_;
 };

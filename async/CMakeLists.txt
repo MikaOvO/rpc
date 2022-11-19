@@ -4,7 +4,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 project(server)
 
-include_directories("./src")
+include_directories("../src")
 
 add_executable(server server.cpp)
 

@@ -22,7 +22,7 @@ const static char* default_file_name = "log";
 class Log {
 public:
     template<typename... Args>
-    static void WriteLog(int level, const char *file_name_, const char *format, Args &&...args) {
+    static void write_log(int level, const char *file_name_, const char *format, Args &&...args) {
         if (level < LOG_LEVEL) {
             return;
         }
@@ -63,8 +63,8 @@ public:
     }
 
     template<typename... Args>
-    static void WriteLogDefault(int level, const char *format, Args &&...args) {
-        Log::WriteLog(level, default_file_name, format, args...);
+    static void write_log_default(int level, const char *format, Args &&...args) {
+        Log::write_log(level, default_file_name, format, args...);
     }
 
 private:

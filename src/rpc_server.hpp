@@ -28,7 +28,7 @@ public:
         stop();
     }
     void run() {
-        Log::WriteLogDefault(0, "[RpcServer] start...\n");
+        Log::write_log_default(0, "[RpcServer] start...\n");
         io_service_pool_.run();
     }
     void async_run() {
@@ -63,7 +63,7 @@ private:
     void do_await_stop() {
         signals_.async_wait(
             [this](std::error_code, int sig) {
-                Log::WriteLogDefault(0, "[server] Get sig %d\n", sig); 
+                Log::write_log_default(0, "[server] Get sig %d\n", sig); 
                 stop(); 
         });
     }
@@ -75,7 +75,7 @@ private:
             }
             
             if (!ec) {
-                Log::WriteLogDefault(0, "[RpcServer] Get a client \n");
+                Log::write_log_default(0, "[RpcServer] Get a client \n");
                 conn_->set_conn_id(client_number_);
                 conn_->run();
                 {
@@ -93,7 +93,7 @@ private:
             std::this_thread::sleep_for(std::chrono::seconds(CHECK_TIME));
             for (auto it = connections_.cbegin(); it != connections_.cend();) {
                 if (it->second->has_stop()) {
-                    Log::WriteLogDefault(0, "[server] clean %d\n", it->second->get_conn_id());
+                    Log::write_log_default(0, "[server] clean %d\n", it->second->get_conn_id());
                     it = connections_.erase(it);
                 } else {
                     ++it;

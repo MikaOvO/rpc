@@ -56,6 +56,7 @@ public:
     void response(uint64_t req_id, std::string data) { 
         std::unique_lock<std::mutex> lock(write_mtx_);
         bool flag = is_write_end();
+        Log::write_log_default(0, "[connection] response flag: %d\n", flag);
         write_queue_.push_back({req_id_, std::make_shared<std::string>(std::move(data))});
         if (flag) {
             write();
@@ -172,6 +173,8 @@ public:
             memcpy(res_.data() + HEADER_LENGTH, msg.content->c_str(), msg.content->size());
         }
 
+        Log::write_log_default(0, "[connection] write res_len: %d\n", res_len_);
+
         int bytes_send;
         bool flag = false;
         if (trig_mode_ == triger::LT_triger) {
@@ -208,14 +211,6 @@ public:
 
         return flag;
     }
-    template <typename Func>
-    void register_handler(std::string const &name, const Func &f) {
-        router_.register_handler(name, f);
-    }
-    template <typename Func, typename Self>
-    void register_handler(std::string const &name, const Func &f, Self *self) {
-        router_.register_handler(name, f, self);
-    }
 private:
     int epoll_fd_;
     int sock_fd_;
@@ -231,7 +226,7 @@ private:
 public:
     uint32_t res_len_;
     uint32_t body_len_;
-    
+
     std::mutex write_mtx_;
     std::deque<Message> write_queue_;
 

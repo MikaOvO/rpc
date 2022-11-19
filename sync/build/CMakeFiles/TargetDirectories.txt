@@ -1,0 +1,3 @@
+/home/mika/workspace/cpp_workspace/rpc/sync/build/CMakeFiles/rebuild_cache.dir
+/home/mika/workspace/cpp_workspace/rpc/sync/build/CMakeFiles/edit_cache.dir
+/home/mika/workspace/cpp_workspace/rpc/sync/build/CMakeFiles/server.dir

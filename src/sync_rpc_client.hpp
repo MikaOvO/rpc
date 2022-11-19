@@ -50,11 +50,9 @@ public:
 
     }
     void run() {
-        thread_ptr_ = std::make_shared<std::thread>(
-            [this]() {
-                read();
-            }
-        );
+        if (thread_ptr_ != nullptr && thread_ptr_->joinable()) {
+            thread_ptr_->join();
+        }
     }
     void stop() {
         if (!has_connect_) {
@@ -68,7 +66,7 @@ public:
     }
     void try_connect() {
         socket_fd_ = socket(AF_INET, SOCK_STREAM, 0);
-        set_blocking(socket_fd_);
+        // set_blocking(socket_fd_);
         struct sockaddr_in servaddr;
         bzero(&servaddr, sizeof(servaddr));
         servaddr.sin_family = AF_INET;
@@ -78,6 +76,12 @@ public:
         assert(ret >= 0);
 
         has_connect_ = true;
+
+        thread_ptr_ = std::make_shared<std::thread>(
+            [this]() {
+                read();
+            }
+        );
     }
     template<size_t timeout, typename T = void, typename... Args>
     typename std::enable_if<std::is_void<T>::value, T>::type
@@ -166,11 +170,13 @@ public:
     }
 
     void read() {
+        std::cout << "read" << std::endl;
         while (has_connect_) {
             recv(socket_fd_, head_, HEADER_LENGTH, 0);
             RpcHeader *header = (RpcHeader *)(head_);
             req_id_ = header->req_id;
             body_len_ = header->body_len;
+            std::cout << "header " << body_len_ << std::endl;
             if (body_len_ > 0 && body_len_ < BUFFER_SIZE) {
                 body_.resize(body_len_);
                 recv(socket_fd_, body_.data(), body_len_, 0);

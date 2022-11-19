@@ -68,7 +68,7 @@ private:
                 RpcHeader *header = (RpcHeader *)(head_);
                 req_id_ = header->req_id;
                 body_len_ = header->body_len;
-                Log::WriteLogDefault(0, "[Connection] Get header req_id: %lld, len: %lld\n", req_id_, body_len_);
+                Log::write_log_default(0, "[Connection] Get header req_id: %lld, len: %lld\n", req_id_, body_len_);
                 if (body_len_ > 0 && body_len_ < BUFFER_SIZE) {
                     if (body_.size() < body_len_) {
                         body_.resize(body_len_);
@@ -95,7 +95,7 @@ private:
 
             if (!ec) {
                 read_head();
-                Log::WriteLogDefault(0, "[Connection] Get body: %s\n", body_.data());
+                Log::write_log_default(0, "[Connection] Get body: %s\n", body_.data());
                 router_.router<std::shared_ptr<Connection> >(body_.data(), length, this->shared_from_this());
             } else {
                 stop();

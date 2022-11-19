@@ -10,7 +10,7 @@ using namespace boost;
 class IOServicePool {
 public:
     explicit IOServicePool(size_t pool_size) : next_io_service_(0) {
-        Log::WriteLogDefault(0, "[IOServicePool] init\n");
+        Log::write_log_default(0, "[IOServicePool] init\n");
         if (pool_size <= 0) {
             throw std::runtime_error("io_service_pool size <= 0!");
         }
@@ -21,7 +21,7 @@ public:
             io_services_.emplace_back(service_ptr);
             works_.emplace_back(work_ptr);
         }
-        Log::WriteLogDefault(0, "[IOServicePool] init success\n");
+        Log::write_log_default(0, "[IOServicePool] init success\n");
     }
     void run() {
         std::vector<std::shared_ptr<std::thread> > threads;
@@ -34,7 +34,7 @@ public:
                 );
             }
         }
-        Log::WriteLogDefault(0, "[IOServicePool] run success\n");
+        Log::write_log_default(0, "[IOServicePool] run success\n");
         for (size_t i = 0; i < pool_size_ * THREAD_NUMBER_PER_CONTEXT; ++i) {
             threads[i]->join();
         }

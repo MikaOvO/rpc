@@ -22,23 +22,23 @@ public:
         try {
             auto p = unpack<std::tuple<std::string>>(data, size);
             auto func_name = std::get<0>(p);
-            Log::WriteLogDefault(0, "call\n");
+            Log::write_log_default(0, "[router] call %s\n", func_name.c_str());
             auto it = invoker_.find(func_name);
             if (it == invoker_.end()) {
                 result = pack_args_str(Result_FAIL, "unknown function: " + func_name);
-                Log::WriteLogDefault(0, "unknown function\n");
+                Log::write_log_default(0, "unknown function\n");
                 conn->response(req_id, std::move(result));
                 return;
             } 
             it->second(data, size, result);
             if (result.size() >= BUFFER_SIZE) {
                 result = pack_args_str(Result_FAIL, "Return size > 10MB.");
-                Log::WriteLogDefault(0, "> 10 MB\n");
+                Log::write_log_default(0, "> 10 MB\n");
             }
             conn->response(req_id, std::move(result));
         } catch (std::exception &e) {
             result = pack_args_str(Result_FAIL, e.what());
-            Log::WriteLogDefault(2, e.what() + '\n');
+            Log::write_log_default(2, e.what() + '\n');
             conn->response(req_id, std::move(result));
         }
     }

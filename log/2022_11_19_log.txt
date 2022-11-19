@@ -1,0 +1,77 @@
+00:29:48 [debug]   [sync_server] epoll_fd: 4, listen_fd: 3
+00:29:48 [debug]   loop start...
+00:29:48 [debug]   [sync server] epoll pre listen fd: 4
+00:29:53 [debug]   [sync server] epoll listen -1 events
+00:30:39 [debug]   [sync_server] epoll_fd: 4, listen_fd: 3
+00:30:39 [debug]   loop start...
+00:30:39 [debug]   [sync server] epoll pre listen fd: 4
+00:31:29 [debug]   [sync server] epoll listen -1 events
+10:52:22 [debug]   [server] run
+10:52:23 [debug]   [sync_server] epoll_fd: 4, listen_fd: 3
+10:52:23 [debug]   [timer] run
+10:52:23 [debug]   [server] run success
+10:52:23 [debug]   loop start...
+10:52:23 [debug]   [sync server] epoll pre listen fd: 4
+10:53:16 [debug]   [sync server] epoll listen 1 events
+10:53:16 [debug]   [sync_server] get user: 5
+10:53:16 [debug]   [sync server] epoll pre listen fd: 4
+10:53:16 [debug]   [sync server] epoll listen 1 events
+10:53:16 [debug]   [sync server] epoll pre listen fd: 4
+10:53:16 [debug]   [sync_server] deal read: 5
+10:53:16 [debug]   [router] call add
+10:58:15 [debug]   [sync_server] run
+10:58:16 [debug]   [sync_server] epoll_fd: 4, listen_fd: 3
+10:58:16 [debug]   [timer] run
+10:58:16 [debug]   [sync_server] run success
+10:58:26 [debug]   [sync server] epoll listen 1 events
+10:58:26 [debug]   [sync_server] get user: 5
+10:58:26 [debug]   [sync server] epoll listen 1 events
+10:58:26 [debug]   [sync_server] deal read: 5
+10:58:26 [debug]   [router] call add
+10:58:26 [debug]   [connection] response flag: 1
+10:58:26 [debug]   [connection] write res_len: 15
+10:59:16 [debug]   [sync server] epoll listen 1 events
+10:59:16 [debug]   [sync_server] deal read: 5
+11:00:42 [debug]   [sync server] epoll listen 1 events
+11:00:42 [debug]   [sync_server] get user: 5
+11:00:42 [debug]   [sync server] epoll listen 1 events
+11:00:42 [debug]   [sync_server] deal read: 5
+11:00:42 [debug]   [router] call add
+11:00:42 [debug]   [connection] response flag: 1
+11:00:42 [debug]   [connection] write res_len: 15
+11:01:26 [debug]   [sync server] epoll listen 1 events
+11:01:26 [debug]   [sync_server] deal read: 5
+11:01:43 [debug]   [sync server] epoll listen 1 events
+11:01:43 [debug]   [sync_server] get user: 5
+11:01:43 [debug]   [sync server] epoll listen 1 events
+11:01:43 [debug]   [sync_server] deal read: 5
+11:01:43 [debug]   [router] call add
+11:01:43 [debug]   [connection] response flag: 1
+11:01:43 [debug]   [connection] write res_len: 15
+11:01:43 [debug]   [sync server] epoll listen 1 events
+11:01:43 [debug]   [sync_server] deal read: 5
+11:14:56 [debug]   [sync_server] stop
+11:14:56 [debug]   [timer] stop
+11:21:45 [debug]   [sync server] epoll listen 1 events
+11:22:34 [debug]   [sync_server] run
+11:22:35 [debug]   [sync_server] epoll_fd: 4, listen_fd: 3
+11:22:35 [debug]   [timer] run
+11:22:35 [debug]   [sync_server] run success
+11:22:57 [debug]   [sync server] epoll listen 1 events
+11:22:57 [debug]   [sync_server] get user: 5
+11:22:57 [debug]   [sync server] epoll listen 1 events
+11:22:57 [debug]   [sync_server] deal read: 5
+11:22:57 [debug]   [router] call add
+11:22:57 [debug]   [connection] response flag: 1
+11:22:57 [debug]   [connection] write res_len: 15
+11:23:05 [debug]   [sync server] epoll listen 1 events
+11:23:05 [debug]   [sync_server] deal read: 5
+11:23:09 [debug]   [sync server] epoll listen 1 events
+11:23:09 [debug]   [sync_server] get user: 5
+11:23:09 [debug]   [sync server] epoll listen 1 events
+11:23:09 [debug]   [sync_server] deal read: 5
+11:23:09 [debug]   [router] call add
+11:23:09 [debug]   [connection] response flag: 1
+11:23:09 [debug]   [connection] write res_len: 15
+11:23:16 [debug]   [sync server] epoll listen 1 events
+11:23:16 [debug]   [sync_server] deal read: 5

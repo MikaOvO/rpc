@@ -12,8 +12,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-template<typename Handler>
-void add_sig(int sig, Handler handler, bool restart) {
+void add_sig(int sig, void (*handler)(int), bool restart) {
     struct sigaction sa;
     memset(&sa, '\0', sizeof(sa));
     sa.sa_handler = handler;

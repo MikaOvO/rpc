@@ -12,10 +12,12 @@ public:
     SafeQueue<std::function<void()>> safe_queue;
     std::condition_variable thread_conditional_variable;
     std::mutex thread_mutex;
-    ThreadCommonData();
+    ThreadCommonData() : shutdown_(false) {
+        
+    }
     void set_shutdown(bool shutdown) {
         std::lock_guard<std::mutex> lock(shutdown_mutex_);
-        shutdown = shutdown_;
+        shutdown_ = shutdown;
     }
     bool get_shutdown() {
         std::lock_guard<std::mutex> lock(shutdown_mutex_);
@@ -29,8 +31,8 @@ private:
 class WorkThread : std::thread {
 public:
     WorkThread(int thread_id, std::shared_ptr<ThreadCommonData> thread_common_data_ptr) {
-        thread_id = thread_id_;
-        thread_common_data_ptr = thread_common_data_ptr_;
+        thread_id_ = thread_id;
+        thread_common_data_ptr_ = thread_common_data_ptr;
     }
     void operator()() {
         std::function<void()> func;
