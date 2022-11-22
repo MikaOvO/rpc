@@ -10,6 +10,7 @@
 #include "log.hpp"
 // #include "connection.hpp"
 #include "function_traits.hpp"
+#include "utils.hpp"
 
 using namespace boost;
 
@@ -21,7 +22,7 @@ public:
         std::string result;
         try {
             auto p = unpack<std::tuple<std::string>>(data, size);
-            auto func_name = std::get<0>(p);
+            std::string func_name = std::get<0>(p);
             Log::write_log_default(0, "[router] call %s\n", func_name.c_str());
             auto it = invoker_.find(func_name);
             if (it == invoker_.end()) {
@@ -31,6 +32,13 @@ public:
                 return;
             } 
             it->second(data, size, result);
+            // try {
+            //     debug_pack<std::tuple<int, std::string> >(result, 2);
+            //     debug_char(result.data(), result.size());
+            // } catch(std::exception &e) {
+            //     std::cout << e.what() << std::endl;
+            // }
+            // Log::write_log_default(0, "[router] %d call result %s\n", req_id, result.c_str());
             if (result.size() >= BUFFER_SIZE) {
                 result = pack_args_str(Result_FAIL, "Return size > 10MB.");
                 Log::write_log_default(0, "> 10 MB\n");

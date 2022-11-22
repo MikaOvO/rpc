@@ -53,6 +53,10 @@ common.hpp
 ../../src/msgpack_utils.hpp
 msgpack.hpp
 -
+iostream
+-
+log.hpp
+../../src/log.hpp
 common.hpp
 ../../src/common.hpp
 
@@ -73,6 +77,8 @@ log.hpp
 ../../src/log.hpp
 function_traits.hpp
 ../../src/function_traits.hpp
+utils.hpp
+../../src/utils.hpp
 
 ../../src/safe_queue.hpp
 queue
@@ -230,6 +236,16 @@ stdlib.h
 unistd.h
 -
 signal.h
+-
+algorithm
+-
+math.h
+-
+mutex
+-
+iostream
+-
+unordered_map
 -
 
 ../../src/work_thread.hpp

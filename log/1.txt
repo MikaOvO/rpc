@@ -1,0 +1,17 @@
+// async 4 * 1 + add
+0.681534s
+// async 4 * 1 + slp
+326.822s
+// async 4 * 5 + add
+0.657563s
+// async 4 * 5 + slp
+65.4517s
+
+// sync ET + add + 20
+1.17298s
+// sync ET + slp + 20
+63.191s
+// sync LT + add + 20
+0.596436s
+// sync LT + slp + 20
+63.182s

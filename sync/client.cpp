@@ -12,7 +12,7 @@ void check() {
     
     cout << result << endl;
 
-    rc.run();
+    rc.stop();
 }
 
 

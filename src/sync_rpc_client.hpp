@@ -19,13 +19,17 @@
 #include "common.hpp"
 #include "msgpack_utils.hpp"
 #include "epoll_utils.hpp"
+#include "utils.hpp"
 
 class ReqResult {
 public:
     ReqResult(std::string &data) : data_(std::move(data)) {
+        // std::cout<<"[result]" << data_.length() << std::endl;
+        // debug_pack<std::tuple<int, int> >(data_, 2);
     }
     bool check_valid() {
-        auto tp = unpack<std::tuple<int> >(data_.c_str(), data_.length());
+        // std::cout<<"[result]" << data_.length() << std::endl;
+        auto tp = unpack<std::tuple<int> >(data_.data(), data_.length());
         if (std::get<0>(tp) == Result_FAIL) {
             return false;
         }
@@ -33,7 +37,8 @@ public:
     }
     template <typename T> 
     T get_result() {
-        auto tp = unpack<std::tuple<int, T> >(data_.c_str(), data_.length());
+        // std::cout<<"[result]" << data_.length() << std::endl;
+        auto tp = unpack<std::tuple<int, T> >(data_.data(), data_.length());
         return std::get<1>(tp);
     }
 private:
@@ -42,12 +47,15 @@ private:
 
 class SyncRpcClient {
 public:
-    SyncRpcClient(const std::string &host, unsigned short port) : 
-                host_(std::move(host)), port_(port), has_connect_(false), req_id_(0) {
-
+    SyncRpcClient(const std::string &host, unsigned short port, int client_id) : 
+                host_(std::move(host)), port_(port), has_connect_(false), req_id_(0), client_id_(client_id) {
+        // body_ = new char[BUFFER_SIZE];
+        // res_ = new char[BUFFER_SIZE];
+        body_ = nullptr;
+        res_ = nullptr;
     }
     ~SyncRpcClient() {
-
+        stop();
     }
     void run() {
         if (thread_ptr_ != nullptr && thread_ptr_->joinable()) {
@@ -58,15 +66,21 @@ public:
         if (!has_connect_) {
             return;
         }
+        has_connect_ = false;
         shutdown(socket_fd_, SHUT_RDWR);
         if (thread_ptr_->joinable()) {
             thread_ptr_->join();  
         }
-        has_connect_ = false;
+        if (body_ != nullptr) {
+            delete []body_;
+        }
+        if (res_ != nullptr) {
+            delete []res_;
+        }
     }
     void try_connect() {
         socket_fd_ = socket(AF_INET, SOCK_STREAM, 0);
-        // set_blocking(socket_fd_);
+        set_blocking(socket_fd_);
         struct sockaddr_in servaddr;
         bzero(&servaddr, sizeof(servaddr));
         servaddr.sin_family = AF_INET;
@@ -112,6 +126,7 @@ public:
             throw std::runtime_error("sync call timeout or deferred\n");
         }
         ReqResult result = future.get();
+        // std::cout << &result << std::endl;
         if (!result.check_valid()) {
             throw std::runtime_error("call error, exception: " + result.get_result<std::string>() + "\n");    
         }
@@ -136,15 +151,19 @@ public:
             req_id = req_id_;
             future_map_.emplace(req_id, std::move(p));
         }
-        auto ret = pack_args(rpc_name, std::forward<Args>(args)...);
+        // std::cout << "async_call" << req_id << std::endl;
+        std::string ret = pack_args_str(rpc_name, std::forward<Args>(args)...);
+        // std::cout << "call " << client_id_ << " " << req_id << std::endl;
         write(req_id, std::move(ret));
-        return future;
+        return std::move(future);
     }
 
     void call_back(uint64_t req_id, std::string &data) {
         {
             std::unique_lock<std::mutex> lock(req_mutex_);
+            // std::cout << "call_back " << client_id_ << " " << req_id << " " << data.size() << std::endl;
             if (future_map_.find(req_id) == future_map_.end()) {
+                // std::cout << "call_back_error " << client_id_ << " " << req_id << " " << data.size() << std::endl;
                 throw std::runtime_error("Request not found.");
             }
             auto &f = future_map_[req_id];
@@ -153,41 +172,70 @@ public:
         }
     }
 
-    void write(uint64_t req_id, msgpack::sbuffer &&buffer) {
-        size_t size = buffer.size();
+    void write(uint64_t req_id, std::string &&str) {
+        size_t size = str.size();
         if (size >= BUFFER_SIZE) {
             throw std::runtime_error("params size too large!");
         }
-        Message msg{req_id, std::make_shared<std::string>(buffer.release())};
+        Message msg{req_id, std::make_shared<std::string>(std::move(str))};
+
+        // debug_pack<std::tuple<std::string, int, int> >(*msg.content, 3);
+
         RpcHeader header{msg.content->size(), msg.req_id};
         res_len_ = msg.content->size() + HEADER_LENGTH;
-        res_.resize(res_len_);
-            
-        memcpy(res_.data(), &header, HEADER_LENGTH);
-        memcpy(res_.data() + HEADER_LENGTH, msg.content->c_str(), msg.content->size());
-    
-        send(socket_fd_, res_.data(), res_len_, 0);
+        res_ = resize(res_, res_len_);
+
+        memcpy(res_, &header, HEADER_LENGTH);
+        memcpy(res_ + HEADER_LENGTH, msg.content->data(), msg.content->size());
+
+        send(socket_fd_, res_, res_len_, 0);
     }
 
     void read() {
-        std::cout << "read" << std::endl;
+        int tmp_req_id;
+        int has_size, need_size;
+        int read_size;
         while (has_connect_) {
-            recv(socket_fd_, head_, HEADER_LENGTH, 0);
+            need_size = HEADER_LENGTH;
+            has_size = 0;
+            while (has_size < need_size) {
+                read_size = recv(socket_fd_, head_ + has_size, HEADER_LENGTH - has_size, 0);
+                if (read_size <= 0) {
+                    break;
+                } else {
+                    has_size += read_size;
+                }
+            }
+            // debug_char(head_, has_size);
+            if (!has_connect_) {
+                break;
+            }
             RpcHeader *header = (RpcHeader *)(head_);
-            req_id_ = header->req_id;
+            tmp_req_id = header->req_id;
             body_len_ = header->body_len;
-            std::cout << "header " << body_len_ << std::endl;
+            body_ = resize(body_, body_len_);
             if (body_len_ > 0 && body_len_ < BUFFER_SIZE) {
-                body_.resize(body_len_);
-                recv(socket_fd_, body_.data(), body_len_, 0);
-                std::string res = std::string(body_.data(), body_.size());
-                call_back(req_id_, res);
+                has_size = 0;
+                need_size = body_len_;
+                while (has_size < need_size) {
+                    read_size = recv(socket_fd_, body_ + has_size, body_len_ - has_size, 0);
+                    if (read_size <= 0) {
+                        break;
+                    } else {
+                        has_size += read_size;
+                    }
+                }
+                // debug_char(body_, has_size);
+                std::string res = std::string(body_, body_len_);
+                call_back(tmp_req_id, res);
             } else {
                 stop();
             }
         }
     }
 private:
+    int client_id_;
+
     std::string host_;
     unsigned short port_;
     std::atomic<bool> has_connect_;
@@ -202,6 +250,7 @@ private:
     uint32_t res_len_;
     uint32_t body_len_;
     char head_[HEADER_LENGTH];
-    std::vector<char> body_;
-    std::vector<char> res_;
+    
+    char *body_;
+    char *res_;
 };

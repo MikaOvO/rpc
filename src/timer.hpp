@@ -66,6 +66,7 @@ public:
     static void tick() {
         std::lock_guard<std::mutex> guard(lock_);
         time_t cur = time(NULL);
+        Log::write_log_default(0, "[timer] tick\n");
         while (sock_queue_.size()) {
             auto p = sock_queue_.top();
             int sockfd = p.second;
@@ -79,15 +80,18 @@ public:
             Log::write_log_default(0, "[timer] clear %d\n", sockfd);
             delete_sock(sockfd);
         }
+        Log::write_log_default(0, "[timer] tick end\n");
     }
     static void add_sock(int sockfd) {
         std::lock_guard<std::mutex> guard(lock_);
+        Log::write_log_default(0, "[timer] add %d\n", sockfd);
         time_t cur = time(NULL);
         expire_map_[sockfd] = cur;
         sock_queue_.push(expire_sock(cur, sockfd));
     }
     static void delete_sock(int sockfd) {
         std::lock_guard<std::mutex> guard(lock_);
+        Log::write_log_default(0, "[timer] delete %d\n", sockfd);
         if (expire_map_.find(sockfd) == expire_map_.end()) {
             return ;
         }

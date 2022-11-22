@@ -1,23 +1,27 @@
-#include "../src/rpc_client.hpp"
+#include "../src/sync_rpc_client.hpp"
 
 #include <bits/stdc++.h>
 
 using namespace std;
 
-void check() {
-    RpcClient rc("127.0.0.1", 9009);
+void check(int client_id) {
+    SyncRpcClient rc("127.0.0.1", 9105, client_id);
     
-    rc.connect();
+    rc.try_connect();
 
-    for (int i = 1; i <= rand() % 200 + 1; ++i) {
-        int x = rand() % 10 + 1;
+    int n = rand() % 40;
+
+    for (int i = 1; i <= n; ++i) {
+        int x = client_id;
         int y = rand() % 10 + 1;
         int result = rc.call<int>("add", x, y);
         assert(x + y == result);
         if (i % 10 == 0) std::this_thread::sleep_for(std::chrono::seconds(1));
     }
 
-    for (int i = 1; i <= rand() % 200 + 1; ++i) {
+    n = rand() % 40;
+
+    for (int i = 1; i <= n; ++i) {
         int x = rand() % 20 + 1;
         string tmp = "";
         for (int j = 0; j < x; ++j)  {
@@ -25,19 +29,21 @@ void check() {
             tmp += (char)(y + 'a');
         }
         string result = rc.call<string>("cat", tmp);
+        //cout << this_thread::get_id() << " " << i << " " << tmp << " " << result << endl;
         assert("begin_" + tmp == result);
         if (i % 10 == 0) std::this_thread::sleep_for(std::chrono::seconds(1));
     }
-
-    rc.run();
+    
+    rc.stop();
 }
 
 
 int main() {
-    srand(4564);
+    srand(1650225989321);
+
     vector<thread> vec;
     for (int i = 0; i < 10; ++i) {
-        vec.emplace_back(thread(check));
+        vec.emplace_back(thread(check, i));
     }
     for (auto &t : vec) {
         t.join();

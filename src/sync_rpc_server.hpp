@@ -38,8 +38,9 @@ public:
         thread_pool_->run();
         std::this_thread::sleep_for(std::chrono::seconds(1));
         event_listen();
-        thread_pool_->submit([this](){event_loop();});
+        run_thread_ptr_ = std::make_shared<std::thread>([this](){event_loop();});
         Log::write_log_default(0, "[sync_server] run success\n");
+        run_thread_ptr_ -> join();
     }
     void stop() {
         if (has_stop_) {
@@ -86,7 +87,7 @@ public:
         } else {
             while (1) {
                 int sock_fd = accept(listen_fd_, (struct sockaddr *)&client_address, &client_addrlength);
-                if (sock_fd < 0) {
+                if (sock_fd <= 0) {
                     break;
                 }
                 if (sock_fd >= MAX_FD) {
@@ -124,17 +125,17 @@ public:
         Timer::run();
     }
 
-    void deal_with_read(int sock_fd, int ev) {
+    void deal_with_read(int sock_fd) {
         Log::write_log_default(0, "[sync_server] deal read: %d\n", sock_fd);
         if (users_[sock_fd].read()) {
             Timer::flush_sock(sock_fd);
             if (users_[sock_fd].is_read_end()) {
                 thread_pool_->submit([this, sock_fd](){
-                    router_ptr_->router<SyncConnection*>(users_[sock_fd].body_.data(), users_[sock_fd].body_len_, &users_[sock_fd]);
+                    router_ptr_->router<SyncConnection*>(users_[sock_fd].body_, users_[sock_fd].body_len_, &users_[sock_fd]);
                 });
-                users_[sock_fd].reset_read();
+            } else {
+                mod_fd(epoll_fd_, sock_fd, EPOLLIN, true, trig_mode_);
             }
-            mod_fd(epoll_fd_, sock_fd, ev, true, trig_mode_);
         } else {
             Timer::delete_sock(sock_fd);
         }
@@ -142,7 +143,6 @@ public:
 
     void deal_with_write(int sock_fd) {
         Log::write_log_default(0, "[sync_server] deal write: %d\n", sock_fd);
-        std::unique_lock<std::mutex> lock(users_[sock_fd].write_mtx_);
         users_[sock_fd].write();
     }
 
@@ -162,8 +162,8 @@ public:
                 if (sock_fd == listen_fd_) {
                     deal_client_data();
                 } else if (events_[i].events & EPOLLIN) {
-                    thread_pool_->submit([this, sock_fd, i]() {
-                        deal_with_read(sock_fd, events_[i].events & (EPOLLIN | EPOLLOUT));
+                    thread_pool_->submit([this, sock_fd]() {
+                        deal_with_read(sock_fd);
                     });
                 } else if (events_[i].events & EPOLLOUT) {
                     thread_pool_->submit([this, sock_fd]() {
@@ -197,5 +197,5 @@ private:
     
     Router *router_ptr_;
     
-    // std::shared_ptr<std::thread> run_thread_ptr_;
+    std::shared_ptr<std::thread> run_thread_ptr_;
 };
